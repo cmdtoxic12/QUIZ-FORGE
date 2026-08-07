@@ -10,7 +10,37 @@
   <div class="aurora"></div>
   <div class="wrap">
     <nav>
-      <a class="logo" href="/">Quiz<span>Forge</span></a>
+      <a class="logo" href="/" aria-label="QuizForge home">
+  <svg class="logo-icon" width="36" height="36" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <!-- Outer ring -->
+    <circle cx="32" cy="32" r="30" stroke="url(#grad)" stroke-width="3" fill="rgba(124,92,255,0.12)"/>
+    <!-- Anvil base -->
+    <path d="M14 42h36c1.5 0 2.5 1.2 2.2 2.6l-1.5 7.4H13.3l-1.5-7.4C11.5 43.2 12.5 42 14 42z" fill="url(#grad)"/>
+    <rect x="22" y="34" width="20" height="8" rx="1.5" fill="#a78bfa"/>
+    <!-- Hammer head + handle -->
+    <rect x="38" y="12" width="10" height="14" rx="2" transform="rotate(35 43 19)" fill="url(#grad2)"/>
+    <rect x="28" y="22" width="4" height="18" rx="1.5" transform="rotate(35 30 31)" fill="#e8ecff"/>
+    <!-- Glowing question mark -->
+    <path d="M28 22c0-4 3.2-7 7.2-7s7 3 7 7c0 2.8-1.6 4.4-3.6 5.6-.9.5-1.6 1.2-1.6 2.4v1.2" stroke="#22d3ee" stroke-width="3.2" stroke-linecap="round" fill="none"/>
+    <circle cx="35" cy="38" r="2.2" fill="#22d3ee"/>
+    <!-- Sparks -->
+    <circle cx="18" cy="18" r="1.4" fill="#f472b6"/>
+    <circle cx="48" cy="28" r="1.1" fill="#a3e635"/>
+    <circle cx="12" cy="30" r="1" fill="#22d3ee"/>
+    <defs>
+      <linearGradient id="grad" x1="8" y1="8" x2="56" y2="56">
+        <stop stop-color="#a78bfa"/>
+        <stop offset="0.5" stop-color="#22d3ee"/>
+        <stop offset="1" stop-color="#f472b6"/>
+      </linearGradient>
+      <linearGradient id="grad2" x1="38" y1="12" x2="48" y2="26">
+        <stop stop-color="#7c5cff"/>
+        <stop offset="1" stop-color="#22d3ee"/>
+      </linearGradient>
+    </defs>
+  </svg>
+  <span class="logo-text">Quiz<span>Forge</span></span>
+</a>
       <div class="nav-links">
         <a href="/library">Library</a>
         <a href="#how">How it works</a>
