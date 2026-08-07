@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Library · QuizForge</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <div class="aurora"></div>
+  <div class="wrap">
+    <nav>
+      <a class="logo" href="/">Quiz<span>Forge</span></a>
+      <div class="nav-links">
+        <a href="/library">Library</a>
+        <a href="/">New quiz</a>
+      </div>
+    </nav>
+
+    <section class="section" style="margin-top:1rem">
+      <h2>Quiz library</h2>
+      <p class="sub">All quizzes forged on this server.</p>
+      <div class="recent-grid" id="libGrid" style="margin-top:1.5rem"></div>
+      <p id="empty" class="hidden" style="margin-top:2rem;color:rgba(255,255,255,0.5);text-align:center">
+        No quizzes yet. <a href="/" style="color:#67e8f9">Forge one →</a>
+      </p>
+    </section>
+  </div>
+  <script src="/js/library.js"></script>
+</body>
+</html>

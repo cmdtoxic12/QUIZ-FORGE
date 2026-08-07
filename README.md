@@ -1,38 +1,75 @@
-# QuizForge
+# QuizForge 2.0
 
-Turn documents into timed arcade quiz games. Upload PDF, DOCX, TXT, MD, CSV, JSON or HTML — a local NLP agent (or optional LLM) builds questions with distractors, streaks, lifelines and a leaderboard.
+QuizForge turns study material into timed quiz games. It keeps the original private, offline local-NLP generator and adds an optional LLM provider, OCR hook, authentication endpoints, a PostgreSQL adapter, and production security controls.
 
-## Setup
+## Quick start
 
 ```bash
-cp .env.example .env
-# Edit DATABASE_URL to point at Postgres
 npm install
-npx drizzle-kit push   # apply schema (or generate + migrate)
-npm run dev
+Copy-Item .env.example .env
+npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open `http://localhost:3000`. The default configuration uses the local engine and JSON storage, so it works without API keys or a database.
 
-### Environment
+## Production configuration
 
-| Variable | Required | Notes |
-|----------|----------|--------|
-| `DATABASE_URL` | Yes | Postgres connection string |
-| `OPENAI_API_KEY` | No | Enables OpenAI quiz generation |
-| `ANTHROPIC_API_KEY` | No | Enables Anthropic |
-| `GEMINI_API_KEY` / `GOOGLE_API_KEY` | No | Enables Gemini |
+Set these values in `.env` before deploying:
 
-Without an LLM key the **local NLP engine** still builds quizzes from definitions, cloze blanks, figures, true/false and “which is true” items.
+| Setting | Purpose |
+| --- | --- |
+| `NODE_ENV=production` | Enables production safeguards. |
+| `JWT_SECRET` | A unique random secret of at least 32 characters. |
+| `CORS_ORIGIN` | Comma-separated allowed web origins. |
+| `STORE_DRIVER=postgres` + `DATABASE_URL` | Enables PostgreSQL persistence. |
+| `QUIZ_ENGINE=gemini` + `GEMINI_API_KEY` | Enables Gemini 3.5 Flash source-grounded generation. |
+| `QUIZ_ENGINE=openai` + `OPENAI_API_KEY` | Enables OpenAI source-grounded generation. |
+| `OCR_ENABLED=true` | Enables image OCR using installed Tesseract. |
+
+For PostgreSQL, enable the `pgcrypto` extension once, then run [`db/schema.sql`](db/schema.sql). The included JSON store is intended for local development only.
+
+## Features
+
+- PDF, DOCX, text, HTML, JSON, and image upload support
+- Image OCR integration hook (Tesseract) with a safe opt-in configuration
+- Local question generation fallback plus OpenAI-compatible generation abstraction
+- Gemini 3.5 Flash support with `GEMINI_MODEL=gemini-3.5-flash`
+- Deterministic source-grounding validation: every AI answer must occur in its exact supporting excerpt
+- Answer explanations and hints preserved in every generated question
+- Registration and sign-in API using bcrypt password hashes and expiring JWTs
+- PostgreSQL repository adapter plus development JSON store
+- Rate limiting, Helmet security headers, upload magic-byte validation, constrained CORS, payload limits, and request IDs
+- Timed quiz play, lifelines, leaderboard, shareable links, and library
+- Node test suite for local generation and security helpers
+
+## API
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/api/health` | Health status and configured providers |
+| `POST` | `/api/auth/register` | Create account (`email`, `password`) |
+| `POST` | `/api/auth/login` | Return an access token |
+| `GET` | `/api/quizzes` | Recent public quizzes |
+| `POST` | `/api/quiz/generate` | Generate from uploads or text |
+| `GET` | `/api/quiz/:code` | Fetch a quiz |
+| `GET/POST` | `/api/quiz/:code/attempt` | Leaderboard and score submission |
+
+Pass `Authorization: Bearer <token>` to associate new quizzes with an authenticated user. The current UI remains anonymous-compatible to preserve the original flow.
+
+New quizzes retain a source snapshot so **Generate new version** can create a versioned question set without replacing the original quiz. Source snapshots are not returned by the public API; use encrypted database storage and define a retention policy before production deployment.
 
 ## Scripts
 
-- `npm run dev` — development server
-- `npm run build` / `npm start` — production
-- `npm run lint` / `npm run typecheck`
+| Command | Description |
+| --- | --- |
+| `npm start` | Run the app |
+| `npm run dev` | Restart automatically during development |
+| `npm test` | Run regression tests |
+| `npm run start:production` | Launch with production environment |
 
-## Notes
+## Important operational notes
 
-- Max 5 files per generate, 12 MB each
-- Scanned / image-only PDFs are not supported (text layer required)
-- Quiz codes are short shareable IDs under `/play/[code]`
+- Treat uploaded content as untrusted; use a malware scanner at your storage/edge provider in production.
+- The sample OCR integration invokes a locally installed Tesseract binary. For high-volume jobs, send uploads to a queue and a managed OCR worker instead.
+- LLM output is normalized and restricted to source material by prompt, but should still be monitored and evaluated for educational accuracy.
+- Configure HTTPS at the reverse proxy and set `CORS_ORIGIN` to your frontend domain.
