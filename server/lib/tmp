@@ -80,82 +80,32 @@ function normalizeQuestion(question, index) {
   };
 }
 
-// ===== More flexible grounding check =====
-function isAnswerSupported(answer, evidence) {
-  const a = normalizeForMatch(answer);
-  const e = normalizeForMatch(evidence);
-
-  if (!a || a.length < 3 || !e) return false;
-
-  // Exact match
-  if (e.includes(a)) return true;
-
-  // Remove common stop words for softer matching
-  const clean = (str) =>
-    str
-      .replace(
-        /\b(the|a|an|of|in|on|at|to|for|and|or|is|are|was|were|be|been|being|that|this|with|from|by|as)\b/g,
-        " "
-      )
-      .replace(/\s+/g, " ")
-      .trim();
-
-  const cleanA = clean(a);
-  const cleanE = clean(e);
-
-  if (cleanA.length >= 4 && cleanE.includes(cleanA)) return true;
-
-  // Check if most important words from the answer appear in the evidence
-  const words = cleanA.split(" ").filter((w) => w.length > 3);
-  if (words.length === 0) return false;
-
-  const matched = words.filter((w) => cleanE.includes(w));
-  return matched.length / words.length >= 0.65; // 65% of key words is enough
-}
-
 function validateGroundedQuestions(questions, sources) {
   const sourceMap = new Map(
-    sources.map((source) => [source.id, normalizeForMatch(source.content)])
+    sources.map((source) => [source.id, normalizeForMatch(source.content)]),
   );
 
   return questions.map((question, index) => {
     const source = sourceMap.get(question.sourceId);
-    const evidenceRaw = question.evidenceQuote || "";
-    const evidence = normalizeForMatch(evidenceRaw);
+    const evidence = normalizeForMatch(question.evidenceQuote);
 
-    // Still require some evidence
-    if (!source || evidence.length < 12) {
+    if (!source || evidence.length < 20 || !source.includes(evidence)) {
       throw new Error(
-        `Question ${index + 1} is missing a proper source excerpt.`
-      );
-    }
-
-    // Softer evidence-in-source check
-    // (accepts if a good portion of the evidence appears in the source)
-    const evidenceStart = evidence.slice(0, 50);
-    const evidenceEnd = evidence.slice(-50);
-    const isEvidenceInSource =
-      source.includes(evidence) ||
-      source.includes(evidenceStart) ||
-      source.includes(evidenceEnd) ||
-      evidence.split(" ").filter((w) => w.length > 4 && source.includes(w)).length >= 3;
-
-    if (!isEvidenceInSource) {
-      throw new Error(
-        `Question ${index + 1} evidence does not appear in the source material.`
+        `Question ${index + 1} is not grounded in an exact source excerpt.`,
       );
     }
 
     const output = normalizeQuestion(question, index);
 
     const correctOption = output.options.find(
-      (option) => option.id === output.correctOptionId
+      (option) => option.id === output.correctOptionId,
     );
 
-    // Flexible answer support
-    if (!isAnswerSupported(correctOption?.text, evidenceRaw)) {
+    const correctAnswer = normalizeForMatch(correctOption?.text);
+
+    if (!correctAnswer || !evidence.includes(correctAnswer)) {
       throw new Error(
-        `Question ${index + 1} answer is not sufficiently supported by its evidence.`
+        `Question ${index + 1} answer is not supported by its evidence.`,
       );
     }
 
