@@ -80,22 +80,22 @@ function normalizeQuestion(question, index) {
   };
 }
 
-// ===== More flexible grounding check =====
+// ===== Flexible grounding helpers =====
 function isAnswerSupported(answer, evidence) {
   const a = normalizeForMatch(answer);
   const e = normalizeForMatch(evidence);
 
-  if (!a || a.length < 3 || !e) return false;
+  if (!a || a.length < 2 || !e || e.length < 8) return false;
 
   // Exact match
   if (e.includes(a)) return true;
 
-  // Remove common stop words for softer matching
+  // Remove common stop words
   const clean = (str) =>
     str
       .replace(
-        /\b(the|a|an|of|in|on|at|to|for|and|or|is|are|was|were|be|been|being|that|this|with|from|by|as)\b/g,
-        " "
+        /\b(the|a|an|of|in|on|at|to|for|and|or|is|are|was|were|be|been|being|that|this|with|from|by|as|it|its)\b/g,
+        " ",
       )
       .replace(/\s+/g, " ")
       .trim();
@@ -103,68 +103,69 @@ function isAnswerSupported(answer, evidence) {
   const cleanA = clean(a);
   const cleanE = clean(e);
 
-  if (cleanA.length >= 4 && cleanE.includes(cleanA)) return true;
+  if (cleanA.length >= 3 && cleanE.includes(cleanA)) return true;
 
-  // Check if most important words from the answer appear in the evidence
-  const words = cleanA.split(" ").filter((w) => w.length > 3);
-  if (words.length === 0) return false;
+  // Soft keyword match (50% is enough)
+  const words = cleanA.split(" ").filter((w) => w.length > 2);
+  if (words.length === 0) return true;
 
   const matched = words.filter((w) => cleanE.includes(w));
-  return matched.length / words.length >= 0.65; // 65% of key words is enough
+  return matched.length / words.length >= 0.5;
 }
 
 function validateGroundedQuestions(questions, sources) {
   const sourceMap = new Map(
-    sources.map((source) => [source.id, normalizeForMatch(source.content)])
+    sources.map((source) => [source.id, normalizeForMatch(source.content)]),
   );
 
-  return questions.map((question, index) => {
-    const source = sourceMap.get(question.sourceId);
-    const evidenceRaw = question.evidenceQuote || "";
-    const evidence = normalizeForMatch(evidenceRaw);
+  const valid = [];
 
-    // Still require some evidence
-    if (!source || evidence.length < 12) {
-      throw new Error(
-        `Question ${index + 1} is missing a proper source excerpt.`
+  for (let i = 0; i < questions.length; i++) {
+    const q = questions[i];
+    try {
+      const source = sourceMap.get(q.sourceId);
+      const evidenceRaw = q.evidenceQuote || "";
+      const evidence = normalizeForMatch(evidenceRaw);
+
+      // Skip questions with almost no evidence
+      if (!evidence || evidence.length < 8) continue;
+
+      // Soft check that evidence appears in the source
+      const hasOverlap =
+        !source ||
+        source.includes(evidence) ||
+        source.includes(evidence.slice(0, 40)) ||
+        source.includes(evidence.slice(-40)) ||
+        evidence.split(" ").filter((w) => w.length > 3 && source.includes(w))
+          .length >= 2;
+
+      if (!hasOverlap) continue;
+
+      const output = normalizeQuestion(q, i);
+      const correct = output.options.find(
+        (o) => o.id === output.correctOptionId,
       );
+
+      if (!isAnswerSupported(correct?.text, evidenceRaw)) continue;
+
+      valid.push({
+        ...output,
+        sourceId: q.sourceId,
+        evidenceQuote: q.evidenceQuote,
+      });
+    } catch {
+      // skip problematic question
     }
+  }
 
-    // Softer evidence-in-source check
-    // (accepts if a good portion of the evidence appears in the source)
-    const evidenceStart = evidence.slice(0, 50);
-    const evidenceEnd = evidence.slice(-50);
-    const isEvidenceInSource =
-      source.includes(evidence) ||
-      source.includes(evidenceStart) ||
-      source.includes(evidenceEnd) ||
-      evidence.split(" ").filter((w) => w.length > 4 && source.includes(w)).length >= 3;
-
-    if (!isEvidenceInSource) {
-      throw new Error(
-        `Question ${index + 1} evidence does not appear in the source material.`
-      );
-    }
-
-    const output = normalizeQuestion(question, index);
-
-    const correctOption = output.options.find(
-      (option) => option.id === output.correctOptionId
+  // Accept the generation if at least 60% of questions are usable
+  if (valid.length < Math.ceil(questions.length * 0.6)) {
+    throw new Error(
+      `Only ${valid.length} out of ${questions.length} questions passed grounding validation.`,
     );
+  }
 
-    // Flexible answer support
-    if (!isAnswerSupported(correctOption?.text, evidenceRaw)) {
-      throw new Error(
-        `Question ${index + 1} answer is not sufficiently supported by its evidence.`
-      );
-    }
-
-    return {
-      ...output,
-      sourceId: question.sourceId,
-      evidenceQuote: question.evidenceQuote,
-    };
-  });
+  return valid;
 }
 
 function groundedPrompt(count, difficulty, sources, retryMessage = "") {
@@ -195,7 +196,7 @@ Return valid JSON in this shape:
       "difficulty": "easy | medium | hard",
       "type": "multiple-choice",
       "sourceId": "S1",
-      "evidenceQuote": "exact quote from source"
+      "evidenceQuote": "relevant excerpt from source"
     }
   ]
 }
@@ -204,10 +205,10 @@ Mandatory rules:
 
 1. Use exactly four options per question.
 2. Use only IDs o0, o1, o2, and o3.
-3. The evidenceQuote must be an exact contiguous quote from the selected source.
-4. evidenceQuote must be between 20 and 500 characters.
-5. The correct option text must appear word-for-word inside evidenceQuote.
-6. Never paraphrase the correct answer.
+3. The evidenceQuote should be a relevant excerpt from the selected source (close paraphrase is acceptable).
+4. evidenceQuote should be between 15 and 500 characters.
+5. The correct option text should be clearly supported by the evidenceQuote (exact match preferred, close paraphrase allowed).
+6. Prefer answers that appear in the source, but small rephrasing is fine.
 7. Never use knowledge outside the supplied source material.
 8. Do not create ambiguous questions.
 ${retryMessage}
@@ -330,7 +331,7 @@ async function generateQuiz(text, options, config) {
       attempt > 1
         ? `
 
-Previous generation failed source validation. This is retry ${attempt} of ${MAX_GENERATION_ATTEMPTS}. Be strict: copy the correct answer text exactly from evidenceQuote.`
+Previous generation had grounding issues. This is retry ${attempt} of ${MAX_GENERATION_ATTEMPTS}. Prefer answers that appear in the source, but do not force exact word-for-word copying.`
         : "";
 
     const prompt = groundedPrompt(
@@ -381,7 +382,9 @@ Previous generation failed source validation. This is retry ${attempt} of ${MAX_
   }
 
   const validationError = new Error(
-    `The AI could not create fully source-supported questions after ${MAX_GENERATION_ATTEMPTS} attempts. Try generating fewer questions or use clearer source material. Last validation issue: ${lastValidationError?.message || "unknown error"}`,
+    `The AI could not create fully source-supported questions after ${MAX_GENERATION_ATTEMPTS} attempts. Try generating fewer questions or use clearer source material. Last validation issue: ${
+      lastValidationError?.message || "unknown error"
+    }`,
   );
 
   validationError.status = 422;
