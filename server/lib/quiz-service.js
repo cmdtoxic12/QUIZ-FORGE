@@ -208,8 +208,8 @@ Return valid JSON in this shape:
       "hint": "string",
       "topic": "string",
       "difficulty": "easy | medium | hard",
-      "points": 100,
-      "seconds": 20,
+      "points": "100",
+      "seconds": "20",
       "type": "multiple-choice",
       "sourceId": "S1",
       "evidenceQuote": "relevant excerpt from source"
