@@ -1152,23 +1152,23 @@ footer {
   background-position: 100% 0;
 }
 
-/* Outer ring pulse */
+/* Outer ring pulse 
 .logo:hover .ring {
   animation: ring-pulse 1.4s ease-in-out infinite;
 }
 
-/* Hammer slight lift */
+ Hammer slight lift
 .logo:hover .hammer,
 .logo:hover .handle {
   animation: hammer-tap 0.7s ease-in-out;
 }
 
-/* Question mark glow */
+/* Question mark glow 
 .logo:hover .qmark,
 .logo:hover .qdot {
   filter: drop-shadow(0 0 6px #22d3ee);
   animation: q-glow 1.2s ease-in-out infinite alternate;
-}
+ } */
 
 /* Sparks dance */
 .logo:hover .spark {
@@ -1253,4 +1253,25 @@ footer {
   50% {
     filter: drop-shadow(0 0 10px rgba(124, 92, 255, 0.55));
   }
+}
+/* Floating animation for logo */
+.logo img {
+  animation: logoFloat 4s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(2deg);
+  }
+}
+
+/* Pulse glow */
+.logo img {
+  box-shadow:
+    0 0 20px rgba(56, 189, 248, 0.4),
+    0 0 45px rgba(129, 140, 248, 0.3);
 }
