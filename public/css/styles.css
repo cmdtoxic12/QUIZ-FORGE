@@ -1106,141 +1106,6 @@ footer {
   border: 1px solid rgba(253, 230, 138, 0.35);
 }
 
-/* ===== Logo base ===== */
-/* .logo {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  font-weight: 900;
-  font-size: 1.15rem;
-  letter-spacing: -0.02em;
-  text-decoration: none;
-  color: var(--ink);
-  position: relative;
-  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-}*/
-
-.logo-icon {
-  flex-shrink: 0;
-  filter: drop-shadow(0 0 6px rgba(124, 92, 255, 0.4));
-  transition:
-    filter 0.4s ease,
-    transform 0.4s ease;
-}
-
-.logo-text span {
-  background: linear-gradient(92deg, #a78bfa, #22d3ee 45%, #f472b6);
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  transition: background-position 0.6s ease;
-}
-
-/* ===== Hover effects ===== */
-.logo:hover {
-  transform: scale(1.04);
-}
-
-.logo:hover .logo-icon {
-  filter: drop-shadow(0 0 14px rgba(124, 92, 255, 0.85))
-    drop-shadow(0 0 28px rgba(34, 211, 238, 0.45));
-  transform: rotate(-4deg);
-}
-
-.logo:hover .logo-text span {
-  background-position: 100% 0;
-}
-
-/* Outer ring pulse 
-.logo:hover .ring {
-  animation: ring-pulse 1.4s ease-in-out infinite;
-}
-
- Hammer slight lift
-.logo:hover .hammer,
-.logo:hover .handle {
-  animation: hammer-tap 0.7s ease-in-out;
-}
-
-/* Question mark glow 
-.logo:hover .qmark,
-.logo:hover .qdot {
-  filter: drop-shadow(0 0 6px #22d3ee);
-  animation: q-glow 1.2s ease-in-out infinite alternate;
- } */
-
-/* Sparks dance */
-.logo:hover .spark {
-  animation: spark-dance 0.9s ease-in-out infinite;
-}
-.logo:hover .s1 {
-  animation-delay: 0s;
-}
-.logo:hover .s2 {
-  animation-delay: 0.15s;
-}
-.logo:hover .s3 {
-  animation-delay: 0.3s;
-}
-
-/* ===== Keyframes ===== */
-@keyframes ring-pulse {
-  0%,
-  100% {
-    stroke-width: 3;
-    opacity: 1;
-  }
-  50% {
-    stroke-width: 4.5;
-    opacity: 0.75;
-  }
-}
-
-@keyframes hammer-tap {
-  0% {
-    transform: rotate(35deg) translateY(0);
-  }
-  40% {
-    transform: rotate(28deg) translateY(-3px);
-  }
-  70% {
-    transform: rotate(38deg) translateY(1px);
-  }
-  100% {
-    transform: rotate(35deg) translateY(0);
-  }
-}
-
-@keyframes q-glow {
-  from {
-    opacity: 0.85;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes spark-dance {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-    opacity: 1;
-  }
-  25% {
-    transform: translate(3px, -4px) scale(1.4);
-    opacity: 0.9;
-  }
-  50% {
-    transform: translate(-2px, -6px) scale(0.8);
-    opacity: 0.7;
-  }
-  75% {
-    transform: translate(4px, -2px) scale(1.2);
-    opacity: 1;
-  }
-}
-
 /* Optional: very subtle continuous idle glow (remove if you want pure hover-only) */
 .logo-icon {
   animation: idle-glow 3.5s ease-in-out infinite;
@@ -1276,16 +1141,16 @@ footer {
     0 0 45px rgba(129, 140, 248, 0.3);
 }
 
-/* ===== Circular Logo ===== */
+/* ===== QuizForge Logo ===== */
 .logo {
   display: inline-flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.7rem;
   text-decoration: none;
-  color: var(--ink);
+  color: #e8ecff;
   font-weight: 900;
-  font-size: 1.15rem;
-  letter-spacing: -0.02em;
+  font-size: 1.2rem;
+  letter-spacing: -0.025em;
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -1293,37 +1158,43 @@ footer {
   transform: scale(1.05);
 }
 
-/* The circular image */
-.logo-img {
-  width: 48px;          /* accurate size */
-  height: 48px;         /* accurate size */
-  border-radius: 50%;   /* makes it fully circular */
+/* Circular image */
+.logo img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
   object-fit: cover;
   display: block;
   flex-shrink: 0;
+  aspect-ratio: 1 / 1;
 
-  /* Nice neon glow that matches the logo */
-  box-shadow: 
-    0 0 0 2px rgba(124, 92, 255, 0.4),
-    0 0 18px rgba(124, 92, 255, 0.55),
-    0 0 32px rgba(34, 211, 238, 0.25);
+  /* Neon glow matching the logo */
+  box-shadow:
+    0 0 0 2px rgba(124, 92, 255, 0.45),
+    0 0 16px rgba(124, 92, 255, 0.6),
+    0 0 28px rgba(34, 211, 238, 0.3);
 
   transition: box-shadow 0.35s ease, transform 0.35s ease;
 }
 
-/* Hover effect */
-.logo:hover .logo-img {
-  box-shadow: 
-    0 0 0 3px rgba(167, 139, 250, 0.7),
-    0 0 24px rgba(124, 92, 255, 0.8),
-    0 0 48px rgba(34, 211, 238, 0.45);
-  transform: rotate(-6deg) scale(1.06);
+/* Hover effect on the image */
+.logo:hover img {
+  transform: rotate(-8deg) scale(1.08);
+  box-shadow:
+    0 0 0 3px rgba(167, 139, 250, 0.75),
+    0 0 22px rgba(124, 92, 255, 0.85),
+    0 0 42px rgba(34, 211, 238, 0.5);
 }
 
-/* Text gradient */
-.logo-text span {
-  background: linear-gradient(92deg, #a78bfa, #22d3ee 45%, #f472b6);
+/* Text styling */
+.logo span {
+  background: linear-gradient(92deg, #a78bfa 0%, #22d3ee 50%, #f472b6 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  transition: filter 0.3s ease;
+}
+
+.logo:hover span {
+  filter: brightness(1.15);
 }
