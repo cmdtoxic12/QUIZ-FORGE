@@ -36,6 +36,14 @@ function chunkSource(text, maxLength = 1800) {
 }
 
 function normalizeQuestion(question, index) {
+  // Default values for game mechanics
+  const defaults = {
+    points: 100,
+    seconds: 20,
+    difficulty: "medium",
+    type: "multiple-choice",
+  };
+
   if (Array.isArray(question.options) && question.correctOptionId) {
     const valid =
       question.prompt &&
@@ -47,8 +55,11 @@ function normalizeQuestion(question, index) {
     }
 
     return {
+      ...defaults,
       ...question,
       id: question.id || `q_${index + 1}`,
+      points: Number(question.points) || defaults.points,
+      seconds: Number(question.seconds) || defaults.seconds,
       explanation:
         question.explanation || "See the source material for context.",
       hint: question.hint || "Review the relevant section.",
@@ -68,6 +79,7 @@ function normalizeQuestion(question, index) {
   const correctIndex = answers.indexOf(question.correct);
 
   return {
+    ...defaults,
     ...question,
     id: question.id || `q_${index + 1}`,
     options: answers.map((text, optionIndex) => ({
@@ -75,6 +87,8 @@ function normalizeQuestion(question, index) {
       text,
     })),
     correctOptionId: `o${correctIndex}`,
+    points: Number(question.points) || defaults.points,
+    seconds: Number(question.seconds) || defaults.seconds,
     explanation: question.explanation || "See the source material for context.",
     hint: question.hint || "Review the relevant section.",
   };
@@ -236,6 +250,8 @@ async function callGemini(prompt, config) {
           {
             role: "user",
             parts: [{ text: prompt }],
+            points: 100,
+            seconds: 20,
           },
         ],
         generationConfig: {
