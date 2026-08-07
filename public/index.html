@@ -1,170 +1,225 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>QuizForge — Turn documents into arcade quizzes</title>
-  <link rel="stylesheet" href="/css/styles.css" />
-</head>
-<body>
-  <div class="aurora"></div>
-  <div class="wrap">
-    <nav>
-      <a class="logo" href="/" aria-label="QuizForge home">
-  <svg class="logo-icon" width="36" height="36" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <!-- Outer ring -->
-    <circle cx="32" cy="32" r="30" stroke="url(#grad)" stroke-width="3" fill="rgba(124,92,255,0.12)"/>
-    <!-- Anvil base -->
-    <path d="M14 42h36c1.5 0 2.5 1.2 2.2 2.6l-1.5 7.4H13.3l-1.5-7.4C11.5 43.2 12.5 42 14 42z" fill="url(#grad)"/>
-    <rect x="22" y="34" width="20" height="8" rx="1.5" fill="#a78bfa"/>
-    <!-- Hammer head + handle -->
-    <rect x="38" y="12" width="10" height="14" rx="2" transform="rotate(35 43 19)" fill="url(#grad2)"/>
-    <rect x="28" y="22" width="4" height="18" rx="1.5" transform="rotate(35 30 31)" fill="#e8ecff"/>
-    <!-- Glowing question mark -->
-    <path d="M28 22c0-4 3.2-7 7.2-7s7 3 7 7c0 2.8-1.6 4.4-3.6 5.6-.9.5-1.6 1.2-1.6 2.4v1.2" stroke="#22d3ee" stroke-width="3.2" stroke-linecap="round" fill="none"/>
-    <circle cx="35" cy="38" r="2.2" fill="#22d3ee"/>
-    <!-- Sparks -->
-    <circle cx="18" cy="18" r="1.4" fill="#f472b6"/>
-    <circle cx="48" cy="28" r="1.1" fill="#a3e635"/>
-    <circle cx="12" cy="30" r="1" fill="#22d3ee"/>
-    <defs>
-      <linearGradient id="grad" x1="8" y1="8" x2="56" y2="56">
-        <stop stop-color="#a78bfa"/>
-        <stop offset="0.5" stop-color="#22d3ee"/>
-        <stop offset="1" stop-color="#f472b6"/>
-      </linearGradient>
-      <linearGradient id="grad2" x1="38" y1="12" x2="48" y2="26">
-        <stop stop-color="#7c5cff"/>
-        <stop offset="1" stop-color="#22d3ee"/>
-      </linearGradient>
-    </defs>
-  </svg>
-  <span class="logo-text">Quiz<span>Forge</span></span>
-</a>
-      <div class="nav-links">
-        <a href="/library">Library</a>
-        <a href="#how">How it works</a>
-      </div>
-    </nav>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>QuizForge — Turn documents into arcade quizzes</title>
+    <link
+      rel="icon"
+      type="image/png"
+      href="https://files.catbox.moe/ta4pt5.png"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <div class="aurora"></div>
+    <div class="wrap">
+      <nav>
+        <a class="logo" href="/" aria-label="QuizForge home">
+          <img src="https://files.catbox.moe/vuop8o.png" alt="QuizForge logo" />
+          <span>QuizForge</span>
+        </a>
+        <div class="nav-links">
+          <a href="/library">Library</a>
+          <a href="#how">How it works</a>
+        </div>
+      </nav>
 
-    <section class="hero">
-      <div>
-        <span class="badge"><span class="dot"></span> Local NLP agent online</span>
-        <h1>Turn any document into a <span class="text-gradient">quiz game</span> in seconds.</h1>
-        <p class="lead">
-          Drop in lecture notes, a research PDF, onboarding docs or messy markdown.
-          The agent mines the facts, invents believable wrong answers, and hands you a
-          timed arcade quiz with streaks, lifelines and a leaderboard.
+      <section class="hero">
+        <div>
+          <span class="badge"
+            ><span class="dot"></span> Local NLP agent online</span
+          >
+          <h1>
+            Turn any document into a
+            <span class="text-gradient">quiz game</span> in seconds.
+          </h1>
+          <p class="lead">
+            Drop in lecture notes, a research PDF, onboarding docs or messy
+            markdown. The agent mines the facts, invents believable wrong
+            answers, and hands you a timed arcade quiz with streaks, lifelines
+            and a leaderboard.
+          </p>
+          <div class="steps">
+            <div class="step glass">
+              <div class="emoji">📥</div>
+              <h3>Upload</h3>
+              <p>PDF, DOCX, TXT, MD, CSV, HTML or raw paste.</p>
+            </div>
+            <div class="step glass">
+              <div class="emoji">🧠</div>
+              <h3>Analyse</h3>
+              <p>Sentences ranked, entities and figures mined.</p>
+            </div>
+            <div class="step glass">
+              <div class="emoji">🕹️</div>
+              <h3>Play</h3>
+              <p>Timed rounds, combo streaks, instant replays.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="builder glass glow-ring" id="builder">
+          <div class="builder-title">
+            <h2>Feed the agent 🍽️</h2>
+            <button type="button" class="btn btn-ghost" id="sampleBtn">
+              ✨ Try a sample
+            </button>
+          </div>
+
+          <div
+            class="dropzone"
+            id="dropzone"
+            role="button"
+            tabindex="0"
+            aria-label="Choose study material to upload"
+          >
+            <div class="icon">📄</div>
+            <p>Drop documents here</p>
+            <p class="hint">
+              PDF · DOCX · TXT · MD · CSV · JSON · HTML — up to 5 files, 12 MB
+              each
+            </p>
+            <input
+              type="file"
+              id="fileInput"
+              multiple
+              accept=".pdf,.docx,.png,.jpg,.jpeg,.webp,.txt,.md,.markdown,.csv,.tsv,.json,.html,.htm,.xml,.yml,.yaml,.srt,.tex,.log"
+              hidden
+            />
+          </div>
+
+          <ul class="file-list" id="fileList"></ul>
+
+          <button type="button" class="link-btn" id="pasteToggle">
+            + Or paste raw text / notes
+          </button>
+          <textarea
+            id="pasteArea"
+            rows="6"
+            class="hidden"
+            placeholder="Paste lecture notes, an article, meeting minutes…"
+          ></textarea>
+
+          <div class="controls">
+            <div>
+              <div class="count-row">
+                <label for="count">Questions</label>
+                <span class="count-val" id="countVal">10</span>
+              </div>
+              <input type="range" id="count" min="5" max="20" value="10" />
+            </div>
+            <div>
+              <label>Intensity</label>
+              <div class="diff-grid" id="diffGrid">
+                <button type="button" class="diff-btn" data-d="easy">
+                  🍃 Warm-up
+                </button>
+                <button type="button" class="diff-btn active" data-d="mixed">
+                  🎯 Balanced
+                </button>
+                <button type="button" class="diff-btn" data-d="hard">
+                  🔥 Brutal
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <p class="error-box hidden" id="errorBox"></p>
+
+          <button type="button" class="gen-btn" id="genBtn">
+            🎮 Generate my quiz game
+          </button>
+          <p class="gen-note">
+            Questions are built only from what your files actually say.
+          </p>
+        </div>
+      </section>
+
+      <section class="section" id="how">
+        <h2>What the agent actually does</h2>
+        <p class="sub">
+          Five question generators run over your text, then compete for a slot
+          in the final game.
         </p>
-        <div class="steps">
-          <div class="step glass">
-            <div class="emoji">📥</div>
-            <h3>Upload</h3>
-            <p>PDF, DOCX, TXT, MD, CSV, HTML or raw paste.</p>
+        <div class="cards">
+          <div class="card glass">
+            <div class="emoji">📖</div>
+            <h3>Definition mining</h3>
+            <p>
+              Finds “X is / refers to / means Y” patterns and turns them into
+              concept questions with rival definitions as decoys.
+            </p>
           </div>
-          <div class="step glass">
-            <div class="emoji">🧠</div>
-            <h3>Analyse</h3>
-            <p>Sentences ranked, entities and figures mined.</p>
+          <div class="card glass">
+            <div class="emoji">🧩</div>
+            <h3>Cloze deletion</h3>
+            <p>
+              Ranks salient terms by frequency and proper-noun weight, then
+              blanks them out of a real sentence.
+            </p>
           </div>
-          <div class="step glass">
-            <div class="emoji">🕹️</div>
-            <h3>Play</h3>
-            <p>Timed rounds, combo streaks, instant replays.</p>
+          <div class="card glass">
+            <div class="emoji">🔢</div>
+            <h3>Figure hunting</h3>
+            <p>
+              Grabs statistics, dates and percentages and generates near-miss
+              numeric distractors.
+            </p>
           </div>
-        </div>
-      </div>
-
-      <div class="builder glass glow-ring" id="builder">
-        <div class="builder-title">
-          <h2>Feed the agent 🍽️</h2>
-          <button type="button" class="btn btn-ghost" id="sampleBtn">✨ Try a sample</button>
-        </div>
-
-        <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Choose study material to upload">
-          <div class="icon">📄</div>
-          <p>Drop documents here</p>
-          <p class="hint">PDF · DOCX · TXT · MD · CSV · JSON · HTML — up to 5 files, 12 MB each</p>
-          <input type="file" id="fileInput" multiple accept=".pdf,.docx,.png,.jpg,.jpeg,.webp,.txt,.md,.markdown,.csv,.tsv,.json,.html,.htm,.xml,.yml,.yaml,.srt,.tex,.log" hidden />
-        </div>
-
-        <ul class="file-list" id="fileList"></ul>
-
-        <button type="button" class="link-btn" id="pasteToggle">+ Or paste raw text / notes</button>
-        <textarea id="pasteArea" rows="6" class="hidden" placeholder="Paste lecture notes, an article, meeting minutes…"></textarea>
-
-        <div class="controls">
-          <div>
-            <div class="count-row">
-              <label for="count">Questions</label>
-              <span class="count-val" id="countVal">10</span>
-            </div>
-            <input type="range" id="count" min="5" max="20" value="10" />
+          <div class="card glass">
+            <div class="emoji">🕵️</div>
+            <h3>Truth spotting</h3>
+            <p>
+              Corrupts sentences by swapping entities or flipping claims — only
+              one option survives verbatim.
+            </p>
           </div>
-          <div>
-            <label>Intensity</label>
-            <div class="diff-grid" id="diffGrid">
-              <button type="button" class="diff-btn" data-d="easy">🍃 Warm-up</button>
-              <button type="button" class="diff-btn active" data-d="mixed">🎯 Balanced</button>
-              <button type="button" class="diff-btn" data-d="hard">🔥 Brutal</button>
-            </div>
+          <div class="card glass">
+            <div class="emoji">⚖️</div>
+            <h3>Fact check rounds</h3>
+            <p>
+              Fast true/false statements with quiet entity swaps and negations
+              to catch skim-readers.
+            </p>
+          </div>
+          <div class="card glass">
+            <div class="emoji">🎚️</div>
+            <h3>Difficulty curve</h3>
+            <p>
+              Candidates are scored, de-duplicated and interleaved so no two
+              questions feel the same.
+            </p>
           </div>
         </div>
+      </section>
 
-        <p class="error-box hidden" id="errorBox"></p>
+      <section class="section" id="recentSection">
+        <div
+          style="
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 1rem;
+          "
+        >
+          <h2>Recently forged</h2>
+          <a
+            href="/library"
+            style="
+              color: #67e8f9;
+              font-size: 0.875rem;
+              font-weight: 700;
+              text-decoration: none;
+            "
+            >View library →</a
+          >
+        </div>
+        <div class="recent-grid" id="recentGrid"></div>
+      </section>
 
-        <button type="button" class="gen-btn" id="genBtn">🎮 Generate my quiz game</button>
-        <p class="gen-note">Questions are built only from what your files actually say.</p>
-      </div>
-    </section>
-
-    <section class="section" id="how">
-      <h2>What the agent actually does</h2>
-      <p class="sub">Five question generators run over your text, then compete for a slot in the final game.</p>
-      <div class="cards">
-        <div class="card glass">
-          <div class="emoji">📖</div>
-          <h3>Definition mining</h3>
-          <p>Finds “X is / refers to / means Y” patterns and turns them into concept questions with rival definitions as decoys.</p>
-        </div>
-        <div class="card glass">
-          <div class="emoji">🧩</div>
-          <h3>Cloze deletion</h3>
-          <p>Ranks salient terms by frequency and proper-noun weight, then blanks them out of a real sentence.</p>
-        </div>
-        <div class="card glass">
-          <div class="emoji">🔢</div>
-          <h3>Figure hunting</h3>
-          <p>Grabs statistics, dates and percentages and generates near-miss numeric distractors.</p>
-        </div>
-        <div class="card glass">
-          <div class="emoji">🕵️</div>
-          <h3>Truth spotting</h3>
-          <p>Corrupts sentences by swapping entities or flipping claims — only one option survives verbatim.</p>
-        </div>
-        <div class="card glass">
-          <div class="emoji">⚖️</div>
-          <h3>Fact check rounds</h3>
-          <p>Fast true/false statements with quiet entity swaps and negations to catch skim-readers.</p>
-        </div>
-        <div class="card glass">
-          <div class="emoji">🎚️</div>
-          <h3>Difficulty curve</h3>
-          <p>Candidates are scored, de-duplicated and interleaved so no two questions feel the same.</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="recentSection">
-      <div style="display:flex;align-items:end;justify-content:space-between;gap:1rem;">
-        <h2>Recently forged</h2>
-        <a href="/library" style="color:#67e8f9;font-size:0.875rem;font-weight:700;text-decoration:none;">View library →</a>
-      </div>
-      <div class="recent-grid" id="recentGrid"></div>
-    </section>
-
-    <footer>QuizForge · local NLP · HTML + Express</footer>
-  </div>
-  <script src="/js/home.js"></script>
-</body>
+      <footer>QuizForge · local NLP · HTML + Express</footer>
+    </div>
+    <script src="/js/home.js"></script>
+  </body>
 </html>
