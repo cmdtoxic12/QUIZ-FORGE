@@ -39,7 +39,7 @@ function normalizeQuestion(question, index) {
   // Default values for game mechanics
   const defaults = {
     points: 100,
-    seconds: 20,
+    seconds: 30,
     difficulty: "medium",
     type: "multiple-choice",
   };
