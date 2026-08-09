@@ -1,363 +1,490 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin · QuizForge</title>
-  <link rel="stylesheet" href="/css/styles.css" />
-  <style>
-    .admin-wrap { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
-    .login-box { max-width: 380px; margin: 6rem auto; padding: 2rem; }
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 1rem;
-      margin: 1.5rem 0 2rem;
-    }
-    .stat-card {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 1rem;
-      padding: 1.2rem;
-      text-align: center;
-    }
-    .stat-card .num {
-      font-size: 1.7rem;
-      font-weight: 900;
-      background: linear-gradient(92deg, #a78bfa, #22d3ee);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    .stat-card .lbl { font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: 0.3rem; }
-    .section { margin-bottom: 2.5rem; }
-    .section h3 { margin-bottom: 1rem; font-size: 1.15rem; }
-    .table-wrap {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 1rem;
-      overflow-x: auto;
-    }
-    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-    th, td { padding: 0.8rem 0.75rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.07); }
-    th { color: rgba(255,255,255,0.45); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; }
-    tr:last-child td { border-bottom: none; }
-    .code-link { color: #67e8f9; text-decoration: none; font-weight: 600; }
-    .code-link:hover { text-decoration: underline; }
-    .badge {
-      display: inline-block;
-      padding: 0.2rem 0.5rem;
-      border-radius: 999px;
-      font-size: 0.7rem;
-      font-weight: 700;
-      background: rgba(124,92,255,0.2);
-      color: #c4b5fd;
-    }
-    .hidden { display: none !important; }
-    input[type="password"] {
-      width: 100%;
-      padding: 0.85rem 1rem;
-      border-radius: 0.75rem;
-      border: 1px solid rgba(255,255,255,0.15);
-      background: rgba(0,0,0,0.3);
-      color: white;
-      font-size: 1rem;
-      margin: 1rem 0;
-    }
-    .error { color: #fb7185; font-size: 0.85rem; margin-top: 0.5rem; }
-    .tabs { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
-    .tab {
-      padding: 0.45rem 1rem;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.05);
-      color: rgba(255,255,255,0.65);
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .tab.active {
-      background: rgba(124,92,255,0.25);
-      border-color: #a78bfa;
-      color: white;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin · QuizForge</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      .admin-wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 1.5rem 1.25rem 4rem;
+      }
+      .login-box {
+        max-width: 380px;
+        margin: 6rem auto;
+        padding: 2rem;
+      }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin: 1.5rem 0 2rem;
+      }
+      .stat-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 1rem;
+        padding: 1.2rem;
+        text-align: center;
+      }
+      .stat-card .num {
+        font-size: 1.7rem;
+        font-weight: 900;
+        background: linear-gradient(92deg, #a78bfa, #22d3ee);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .stat-card .lbl {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+        margin-top: 0.3rem;
+      }
+      .section {
+        margin-bottom: 2.5rem;
+      }
+      .section h3 {
+        margin-bottom: 1rem;
+        font-size: 1.15rem;
+      }
+      .table-wrap {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 1rem;
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.88rem;
+      }
+      th,
+      td {
+        padding: 0.8rem 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      }
+      th {
+        color: rgba(255, 255, 255, 0.45);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      .code-link {
+        color: #67e8f9;
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .code-link:hover {
+        text-decoration: underline;
+      }
+      .badge {
+        display: inline-block;
+        padding: 0.2rem 0.5rem;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        background: rgba(124, 92, 255, 0.2);
+        color: #c4b5fd;
+      }
+      .hidden {
+        display: none !important;
+      }
+      input[type="password"] {
+        width: 100%;
+        padding: 0.85rem 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(0, 0, 0, 0.3);
+        color: white;
+        font-size: 1rem;
+        margin: 1rem 0;
+      }
+      .error {
+        color: #fb7185;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+      }
+      .tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.25rem;
+        flex-wrap: wrap;
+      }
+      .tab {
+        padding: 0.45rem 1rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.65);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .tab.active {
+        background: rgba(124, 92, 255, 0.25);
+        border-color: #a78bfa;
+        color: white;
+      }
 
-    /* Bar Chart */
-    .chart-wrap {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 1rem;
-      padding: 1.5rem 1.25rem 1.25rem;
-      margin-bottom: 1.25rem;
-    }
-    .chart {
-      display: flex;
-      align-items: flex-end;
-      gap: 0.75rem;
-      height: 180px;
-      padding-top: 1rem;
-    }
-    .chart-bar {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.4rem;
-      height: 100%;
-      justify-content: flex-end;
-    }
-    .bar {
-      width: 100%;
-      max-width: 48px;
-      border-radius: 8px 8px 4px 4px;
-      background: linear-gradient(180deg, #a78bfa 0%, #7c5cff 50%, #22d3ee 100%);
-      transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-      min-height: 4px;
-    }
-    .bar:hover { filter: brightness(1.15); }
-    .bar-value { font-size: 0.75rem; font-weight: 700; color: rgba(255,255,255,0.85); }
-    .bar-label { font-size: 0.7rem; color: rgba(255,255,255,0.45); text-align: center; }
-  </style>
-</head>
-<body>
-  <div class="aurora"></div>
+      /* Bar Chart */
+      .chart-wrap {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 1rem;
+        padding: 1.5rem 1.25rem 1.25rem;
+        margin-bottom: 1.25rem;
+      }
+      .chart {
+        display: flex;
+        align-items: flex-end;
+        gap: 0.75rem;
+        height: 180px;
+        padding-top: 1rem;
+      }
+      .chart-bar {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.4rem;
+        height: 100%;
+        justify-content: flex-end;
+      }
+      .bar {
+        width: 100%;
+        max-width: 48px;
+        border-radius: 8px 8px 4px 4px;
+        background: linear-gradient(
+          180deg,
+          #a78bfa 0%,
+          #7c5cff 50%,
+          #22d3ee 100%
+        );
+        transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        min-height: 4px;
+      }
+      .bar:hover {
+        filter: brightness(1.15);
+      }
+      .bar-value {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.85);
+      }
+      .bar-label {
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.45);
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="aurora"></div>
 
-  <!-- LOGIN -->
-  <div class="admin-wrap" id="loginView">
-    <div class="glass glow-ring login-box">
-      <h2 style="text-align:center;margin-bottom:0.5rem">Admin Login</h2>
-      <p style="text-align:center;color:rgba(255,255,255,0.5);font-size:0.9rem">Enter the admin password</p>
-      <input type="password" id="password" placeholder="Password" autofocus />
-      <button class="gen-btn" id="loginBtn" style="margin-top:0.5rem">Login</button>
-      <p class="error hidden" id="loginError">Wrong password</p>
-    </div>
-  </div>
-
-  <!-- DASHBOARD -->
-  <div class="admin-wrap hidden" id="dashboard">
-    <nav style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.75rem">
-      <a class="logo" href="/">Quiz<span>Forge</span> · Admin</a>
-      <button class="btn btn-ghost" id="logoutBtn">Logout</button>
-    </nav>
-
-    <!-- Overview Cards -->
-    <div class="stats-grid" id="statsGrid"></div>
-
-    <!-- Last 7 Days Chart -->
-    <div class="section">
-      <h3>Last 7 Days</h3>
-      <div class="chart-wrap">
-        <div class="chart" id="weekChart"></div>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Total Visits</th>
-              <th>Unique Visitors</th>
-            </tr>
-          </thead>
-          <tbody id="weekTable"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Tabs -->
-    <div class="tabs">
-      <button class="tab active" data-tab="library">Library</button>
-      <button class="tab" data-tab="top">Top Quizzes</button>
-      <button class="tab" data-tab="scores">Top Scores</button>
-      <button class="tab" data-tab="recent">Recent Attempts</button>
-    </div>
-
-    <!-- Library -->
-    <div class="section tab-content" id="tab-library">
-      <h3>All Quizzes</h3>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Code</th>
-              <th>Plays</th>
-              <th>Questions</th>
-              <th>Difficulty</th>
-              <th>Engine</th>
-            </tr>
-          </thead>
-          <tbody id="libraryTable"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Top Quizzes -->
-    <div class="section tab-content hidden" id="tab-top">
-      <h3>Most Played Quizzes</h3>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Title</th>
-              <th>Code</th>
-              <th>Plays</th>
-              <th>Questions</th>
-            </tr>
-          </thead>
-          <tbody id="topTable"></tbody>
-        </table>
+    <!-- LOGIN -->
+    <div class="admin-wrap" id="loginView">
+      <div class="glass glow-ring login-box">
+        <h2 style="text-align: center; margin-bottom: 0.5rem">Admin Login</h2>
+        <p
+          style="
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+          "
+        >
+          Enter the admin password
+        </p>
+        <input type="password" id="password" placeholder="Password" autofocus />
+        <button class="gen-btn" id="loginBtn" style="margin-top: 0.5rem">
+          Login
+        </button>
+        <p class="error hidden" id="loginError">Wrong password</p>
       </div>
     </div>
 
-    <!-- Top Scores -->
-    <div class="section tab-content hidden" id="tab-scores">
-      <h3>Highest Scores</h3>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Player</th>
-              <th>Score</th>
-              <th>Correct</th>
-              <th>Streak</th>
-              <th>Quiz</th>
-            </tr>
-          </thead>
-          <tbody id="scoresTable"></tbody>
-        </table>
+    <!-- DASHBOARD -->
+    <div class="admin-wrap hidden" id="dashboard">
+      <nav
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1.75rem;
+        "
+      >
+        <a class="logo" href="/">Quiz<span>Forge</span> · Admin</a>
+        <button class="btn btn-ghost" id="logoutBtn">Logout</button>
+      </nav>
+
+      <!-- Overview Cards -->
+      <div class="stats-grid" id="statsGrid"></div>
+
+      <!-- Last 7 Days Chart -->
+      <div class="section">
+        <h3>Last 7 Days</h3>
+        <div class="chart-wrap">
+          <div class="chart" id="weekChart"></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Total Visits</th>
+                <th>Unique Visitors</th>
+              </tr>
+            </thead>
+            <tbody id="weekTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" data-tab="library">Library</button>
+        <button class="tab" data-tab="top">Top Quizzes</button>
+        <button class="tab" data-tab="scores">Top Scores</button>
+        <button class="tab" data-tab="recent">Recent Attempts</button>
+      </div>
+
+      <!-- Library -->
+      <div class="section tab-content" id="tab-library">
+        <h3>All Quizzes</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Code</th>
+                <th>Plays</th>
+                <th>Questions</th>
+                <th>Difficulty</th>
+                <th>Engine</th>
+              </tr>
+            </thead>
+            <tbody id="libraryTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Top Quizzes -->
+      <div class="section tab-content hidden" id="tab-top">
+        <h3>Most Played Quizzes</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Title</th>
+                <th>Code</th>
+                <th>Plays</th>
+                <th>Questions</th>
+              </tr>
+            </thead>
+            <tbody id="topTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Top Scores -->
+      <div class="section tab-content hidden" id="tab-scores">
+        <h3>Highest Scores</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Player</th>
+                <th>Score</th>
+                <th>Correct</th>
+                <th>Streak</th>
+                <th>Quiz</th>
+              </tr>
+            </thead>
+            <tbody id="scoresTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Recent Attempts -->
+      <div class="section tab-content hidden" id="tab-recent">
+        <h3>Recent Attempts</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Player</th>
+                <th>Score</th>
+                <th>Correct</th>
+                <th>Quiz</th>
+                <th>When</th>
+              </tr>
+            </thead>
+            <tbody id="recentTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <button class="tab" data-tab="users">Users</button>
+
+      <div class="section tab-content hidden" id="tab-users">
+        <h3>Recent Users</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Joined</th>
+              </tr>
+            </thead>
+            <tbody id="usersTable"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- Recent Attempts -->
-    <div class="section tab-content hidden" id="tab-recent">
-      <h3>Recent Attempts</h3>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Player</th>
-              <th>Score</th>
-              <th>Correct</th>
-              <th>Quiz</th>
-              <th>When</th>
-            </tr>
-          </thead>
-          <tbody id="recentTable"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+    <script>
+      const TOKEN_KEY = "qf_admin_token";
+      const loginView = document.getElementById("loginView");
+      const dashboard = document.getElementById("dashboard");
+      const passwordInput = document.getElementById("password");
+      const loginBtn = document.getElementById("loginBtn");
+      const loginError = document.getElementById("loginError");
+      const logoutBtn = document.getElementById("logoutBtn");
 
-  <script>
-    const TOKEN_KEY = "qf_admin_token";
-    const loginView = document.getElementById("loginView");
-    const dashboard = document.getElementById("dashboard");
-    const passwordInput = document.getElementById("password");
-    const loginBtn = document.getElementById("loginBtn");
-    const loginError = document.getElementById("loginError");
-    const logoutBtn = document.getElementById("logoutBtn");
+      function getToken() {
+        return localStorage.getItem(TOKEN_KEY);
+      }
+      function setToken(t) {
+        localStorage.setItem(TOKEN_KEY, t);
+      }
+      function clearToken() {
+        localStorage.removeItem(TOKEN_KEY);
+      }
 
-    function getToken() { return localStorage.getItem(TOKEN_KEY); }
-    function setToken(t) { localStorage.setItem(TOKEN_KEY, t); }
-    function clearToken() { localStorage.removeItem(TOKEN_KEY); }
+      function escapeHtml(s) {
+        return String(s || "").replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      }
 
-    function escapeHtml(s) {
-      return String(s || "").replace(/[&<>"']/g, c =>
-        ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])
-      );
-    }
+      function timeAgo(ts) {
+        if (!ts) return "—";
+        const diff = Date.now() - ts;
+        const mins = Math.floor(diff / 60000);
+        if (mins < 1) return "Just now";
+        if (mins < 60) return `${mins}m ago`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `${hrs}h ago`;
+        return `${Math.floor(hrs / 24)}d ago`;
+      }
 
-    function timeAgo(ts) {
-      if (!ts) return "—";
-      const diff = Date.now() - ts;
-      const mins = Math.floor(diff / 60000);
-      if (mins < 1) return "Just now";
-      if (mins < 60) return `${mins}m ago`;
-      const hrs = Math.floor(mins / 60);
-      if (hrs < 24) return `${hrs}h ago`;
-      return `${Math.floor(hrs / 24)}d ago`;
-    }
+      async function login() {
+        loginError.classList.add("hidden");
+        const password = passwordInput.value.trim();
+        if (!password) return;
 
-    async function login() {
-      loginError.classList.add("hidden");
-      const password = passwordInput.value.trim();
-      if (!password) return;
+        try {
+          const res = await fetch("/api/admin/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Login failed");
+          setToken(data.token);
+          showDashboard();
+        } catch (err) {
+          loginError.textContent = err.message;
+          loginError.classList.remove("hidden");
+        }
+      }
 
-      try {
-        const res = await fetch("/api/admin/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ password }),
+      async function loadStats() {
+        const res = await fetch("/api/admin/stats", {
+          headers: { "x-admin-token": getToken() },
         });
+        if (res.status === 401) {
+          clearToken();
+          showLogin();
+          return;
+        }
+
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Login failed");
-        setToken(data.token);
-        showDashboard();
-      } catch (err) {
-        loginError.textContent = err.message;
-        loginError.classList.remove("hidden");
-      }
-    }
+        const o = data.overview;
 
-    async function loadStats() {
-      const res = await fetch("/api/admin/stats", {
-        headers: { "x-admin-token": getToken() },
-      });
-      if (res.status === 401) {
-        clearToken();
-        showLogin();
-        return;
-      }
-
-      const data = await res.json();
-      const o = data.overview;
-
-      // Overview cards
-      document.getElementById("statsGrid").innerHTML = `
+        // Overview cards
+        document.getElementById("statsGrid").innerHTML = `
         <div class="stat-card"><div class="num">${o.totalVisitors.toLocaleString()}</div><div class="lbl">Total Visitors</div></div>
         <div class="stat-card"><div class="num">${o.uniqueVisitors.toLocaleString()}</div><div class="lbl">Unique Visitors</div></div>
         <div class="stat-card"><div class="num">${o.todayVisitors.toLocaleString()}</div><div class="lbl">Today's Visits</div></div>
         <div class="stat-card"><div class="num">${o.todayUnique.toLocaleString()}</div><div class="lbl">Today's Unique</div></div>
+        <div class="stat-card"><div class="num">${o.totalUsers || 0}</div><div class="lbl">Total Users</div></div>
         <div class="stat-card"><div class="num">${o.totalQuizzes}</div><div class="lbl">Total Quizzes</div></div>
         <div class="stat-card"><div class="num">${o.totalPlays}</div><div class="lbl">Total Plays</div></div>
         <div class="stat-card"><div class="num">${o.totalAttempts}</div><div class="lbl">Total Attempts</div></div>
         <div class="stat-card"><div class="num">${o.avgScore}</div><div class="lbl">Avg Score</div></div>
       `;
 
-      // Last 7 Days Chart + Table
-      const weekChart = document.getElementById("weekChart");
-      const weekTable = document.getElementById("weekTable");
+        // Last 7 Days Chart + Table
+        const weekChart = document.getElementById("weekChart");
+        const weekTable = document.getElementById("weekTable");
 
-      if (data.last7Days?.length) {
-        const maxTotal = Math.max(...data.last7Days.map(d => d.total), 1);
+        if (data.last7Days?.length) {
+          const maxTotal = Math.max(...data.last7Days.map((d) => d.total), 1);
 
-        weekChart.innerHTML = data.last7Days.map(d => {
-          const date = new Date(d.day);
-          const label = date.toLocaleDateString("en-US", { weekday: "short" });
-          const heightPct = Math.max(4, (d.total / maxTotal) * 100);
-          return `
+          weekChart.innerHTML = data.last7Days
+            .map((d) => {
+              const date = new Date(d.day);
+              const label = date.toLocaleDateString("en-US", {
+                weekday: "short",
+              });
+              const heightPct = Math.max(4, (d.total / maxTotal) * 100);
+              return `
             <div class="chart-bar">
               <div class="bar-value">${d.total}</div>
               <div class="bar" style="height:${heightPct}%"></div>
               <div class="bar-label">${label}</div>
             </div>
           `;
-        }).join("");
+            })
+            .join("");
 
-        weekTable.innerHTML = data.last7Days.map(d => {
-          const date = new Date(d.day);
-          const label = date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-          return `<tr><td>${label}</td><td><strong>${d.total}</strong></td><td>${d.unique}</td></tr>`;
-        }).join("");
-      } else {
-        weekChart.innerHTML = `<p style="color:rgba(255,255,255,0.4);padding:2rem 0">No visitor data yet</p>`;
-        weekTable.innerHTML = `<tr><td colspan="3" style="color:rgba(255,255,255,0.4)">No data yet</td></tr>`;
-      }
+          weekTable.innerHTML = data.last7Days
+            .map((d) => {
+              const date = new Date(d.day);
+              const label = date.toLocaleDateString("en-US", {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+              });
+              return `<tr><td>${label}</td><td><strong>${d.total}</strong></td><td>${d.unique}</td></tr>`;
+            })
+            .join("");
+        } else {
+          weekChart.innerHTML = `<p style="color:rgba(255,255,255,0.4);padding:2rem 0">No visitor data yet</p>`;
+          weekTable.innerHTML = `<tr><td colspan="3" style="color:rgba(255,255,255,0.4)">No data yet</td></tr>`;
+        }
 
-      // Library
-      document.getElementById("libraryTable").innerHTML = data.quizzes.map(q => `
+        // Library
+        document.getElementById("libraryTable").innerHTML =
+          data.quizzes
+            .map(
+              (q) => `
         <tr>
           <td>${escapeHtml(q.title)}</td>
           <td><a class="code-link" href="/play/${q.code}" target="_blank">${q.code}</a></td>
@@ -366,10 +493,16 @@
           <td><span class="badge">${q.difficulty || "mixed"}</span></td>
           <td>${q.engine || "—"}</td>
         </tr>
-      `).join("") || `<tr><td colspan="6" style="color:rgba(255,255,255,0.4)">No quizzes yet</td></tr>`;
+      `,
+            )
+            .join("") ||
+          `<tr><td colspan="6" style="color:rgba(255,255,255,0.4)">No quizzes yet</td></tr>`;
 
-      // Top Quizzes
-      document.getElementById("topTable").innerHTML = data.topQuizzes.map((q, i) => `
+        // Top Quizzes
+        document.getElementById("topTable").innerHTML =
+          data.topQuizzes
+            .map(
+              (q, i) => `
         <tr>
           <td>${i + 1}</td>
           <td>${escapeHtml(q.title)}</td>
@@ -377,10 +510,16 @@
           <td><strong>${q.plays || 0}</strong></td>
           <td>${q.questionCount || "—"}</td>
         </tr>
-      `).join("") || `<tr><td colspan="5" style="color:rgba(255,255,255,0.4)">No data</td></tr>`;
+      `,
+            )
+            .join("") ||
+          `<tr><td colspan="5" style="color:rgba(255,255,255,0.4)">No data</td></tr>`;
 
-      // Top Scores
-      document.getElementById("scoresTable").innerHTML = data.topPlayers.map((a, i) => `
+        // Top Scores
+        document.getElementById("scoresTable").innerHTML =
+          data.topPlayers
+            .map(
+              (a, i) => `
         <tr>
           <td>${i + 1}</td>
           <td>${escapeHtml(a.playerName || "Anonymous")}</td>
@@ -389,10 +528,16 @@
           <td>🔥 ${a.maxStreak || 0}</td>
           <td><a class="code-link" href="/play/${a.quizCode}" target="_blank">${escapeHtml(a.quizTitle || a.quizCode)}</a></td>
         </tr>
-      `).join("") || `<tr><td colspan="6" style="color:rgba(255,255,255,0.4)">No scores yet</td></tr>`;
+      `,
+            )
+            .join("") ||
+          `<tr><td colspan="6" style="color:rgba(255,255,255,0.4)">No scores yet</td></tr>`;
 
-      // Recent Attempts
-      document.getElementById("recentTable").innerHTML = data.recentAttempts.map(a => `
+        // Recent Attempts
+        document.getElementById("recentTable").innerHTML =
+          data.recentAttempts
+            .map(
+              (a) => `
         <tr>
           <td>${escapeHtml(a.playerName || "Anonymous")}</td>
           <td>${(a.score || 0).toLocaleString()}</td>
@@ -400,34 +545,67 @@
           <td><a class="code-link" href="/play/${a.quizCode}" target="_blank">${escapeHtml(a.quizTitle || a.quizCode)}</a></td>
           <td>${timeAgo(a.at)}</td>
         </tr>
-      `).join("") || `<tr><td colspan="5" style="color:rgba(255,255,255,0.4)">No attempts yet</td></tr>`;
-    }
+      `,
+            )
+            .join("") ||
+          `<tr><td colspan="5" style="color:rgba(255,255,255,0.4)">No attempts yet</td></tr>`;
+        document.getElementById("usersTable").innerHTML =
+          (data.recentUsers || [])
+            .map((u) => {
+              const date = u.createdAt
+                ? new Date(u.createdAt).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })
+                : "—";
+              return `
+        <tr>
+          <td>${escapeHtml(u.email)}</td>
+          <td>${date}</td>
+        </tr>
+      `;
+            })
+            .join("") ||
+          `<tr><td colspan="2" style="color:rgba(255,255,255,0.4)">No users yet</td></tr>`;
+      }
 
-    // Tabs
-    document.querySelectorAll(".tab").forEach(btn => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-        document.querySelectorAll(".tab-content").forEach(c => c.classList.add("hidden"));
-        btn.classList.add("active");
-        document.getElementById(`tab-${btn.dataset.tab}`).classList.remove("hidden");
+      // Tabs
+      document.querySelectorAll(".tab").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document
+            .querySelectorAll(".tab")
+            .forEach((t) => t.classList.remove("active"));
+          document
+            .querySelectorAll(".tab-content")
+            .forEach((c) => c.classList.add("hidden"));
+          btn.classList.add("active");
+          document
+            .getElementById(`tab-${btn.dataset.tab}`)
+            .classList.remove("hidden");
+        });
       });
-    });
 
-    function showDashboard() {
-      loginView.classList.add("hidden");
-      dashboard.classList.remove("hidden");
-      loadStats();
-    }
-    function showLogin() {
-      dashboard.classList.add("hidden");
-      loginView.classList.remove("hidden");
-    }
+      function showDashboard() {
+        loginView.classList.add("hidden");
+        dashboard.classList.remove("hidden");
+        loadStats();
+      }
+      function showLogin() {
+        dashboard.classList.add("hidden");
+        loginView.classList.remove("hidden");
+      }
 
-    loginBtn.addEventListener("click", login);
-    passwordInput.addEventListener("keydown", e => { if (e.key === "Enter") login(); });
-    logoutBtn.addEventListener("click", () => { clearToken(); showLogin(); });
+      loginBtn.addEventListener("click", login);
+      passwordInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") login();
+      });
+      logoutBtn.addEventListener("click", () => {
+        clearToken();
+        showLogin();
+      });
 
-    if (getToken()) showDashboard();
-  </script>
-</body>
+      if (getToken()) showDashboard();
+    </script>
+  </body>
 </html>

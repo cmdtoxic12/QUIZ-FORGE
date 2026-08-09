@@ -636,8 +636,10 @@ app.get("/api/admin/stats", requireAdmin, async (req, res, next) => {
         uniqueVisitors,
         todayVisitors,
         todayUnique,
+        totalUsers,
       },
       last7Days,
+      recentUsers,
       quizzes: quizzes.map((q) => ({
         code: q.code,
         title: q.title,
@@ -659,6 +661,30 @@ app.get("/api/admin/stats", requireAdmin, async (req, res, next) => {
     });
   } catch (err) {
     next(err);
+  }
+
+  // Inside /api/admin/stats
+
+  let totalUsers = 0;
+  let recentUsers = [];
+
+  if (config.storeDriver === "postgres" && store.pool) {
+    const usersRes = await store.pool.query(
+      "SELECT COUNT(*)::int AS count FROM users",
+    );
+    totalUsers = usersRes.rows[0]?.count || 0;
+
+    const recentUsersRes = await store.pool.query(`
+    SELECT id, email, created_at 
+    FROM users 
+    ORDER BY created_at DESC 
+    LIMIT 15
+  `);
+    recentUsers = recentUsersRes.rows.map((u) => ({
+      id: u.id,
+      email: u.email,
+      createdAt: u.created_at,
+    }));
   }
 });
 
