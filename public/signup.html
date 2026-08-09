@@ -91,21 +91,7 @@
         <p class="sub">Start forging quizzes in seconds</p>
 
         <div class="google-btn-wrap">
-          <div
-            id="g_id_onload"
-            data-client_id="471791152696-0vcn9dcvvd1ttdutn9fuq1gqjdnk8b17.apps.googleusercontent.com"
-            data-callback="handleGoogle"
-            data-auto_prompt="false"
-          ></div>
-          <div
-            class="g_id_signin"
-            data-type="standard"
-            data-size="large"
-            data-theme="outline"
-            data-text="signup_with"
-            data-shape="rectangular"
-            data-logo_alignment="left"
-          ></div>
+          <div id="googleBtn"></div>
         </div>
 
         <div class="divider">or</div>
@@ -170,21 +156,53 @@
         }
       });
 
-      async function handleGoogle(response) {
-        try {
-          const res = await fetch("/api/auth/google", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ credential: response.credential }),
+      function handleGoogle(response) {
+        fetch("/api/auth/google", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ credential: response.credential }),
+        })
+          .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
+          .then(({ ok, data }) => {
+            if (!ok) throw new Error(data.error || "Google login failed");
+            Auth.setAuth(data.token, data.user);
+            window.location.href = "/";
+          })
+          .catch((err) => {
+            const errorBox = document.getElementById("errorBox");
+            if (errorBox) {
+              errorBox.textContent = err.message;
+              errorBox.classList.remove("hidden");
+            } else {
+              alert(err.message);
+            }
           });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || "Google signup failed");
-          Auth.setAuth(data.token, data.user);
-          window.location.href = "/";
-        } catch (err) {
-          showError(err.message);
-        }
       }
+
+      window.addEventListener("load", function () {
+        if (!window.google || !google.accounts) {
+          console.error("Google script not loaded");
+          return;
+        }
+
+        google.accounts.id.initialize({
+          client_id:
+            "471791152696-0vcn9dcvvd1ttdutn9fuq1gqjdnk8b17.apps.googleusercontent.com",
+          callback: handleGoogle,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
+
+        google.accounts.id.renderButton(document.getElementById("googleBtn"), {
+          type: "standard",
+          theme: "outline",
+          size: "large",
+          text: "signup_with", // use "signup_with" on signup page
+          shape: "rectangular",
+          logo_alignment: "left",
+          width: 320,
+        });
+      });
       window.handleGoogle = handleGoogle;
     </script>
   </body>

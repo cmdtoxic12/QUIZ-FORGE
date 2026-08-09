@@ -91,21 +91,7 @@
         <p class="sub">Log in to forge quizzes</p>
 
         <div class="google-btn-wrap">
-          <div
-            id="g_id_onload"
-            data-client_id="471791152696-0vcn9dcvvd1ttdutn9fuq1gqjdnk8b17.apps.googleusercontent.com"
-            data-callback="handleGoogle"
-            data-auto_prompt="false"
-          ></div>
-          <div
-            class="g_id_signin"
-            data-type="standard"
-            data-size="large"
-            data-theme="outline"
-            data-text="signin_with"
-            data-shape="rectangular"
-            data-logo_alignment="left"
-          ></div>
+          <div id="googleBtn"></div>
         </div>
 
         <div class="divider">or</div>
@@ -169,21 +155,45 @@
         }
       });
 
-      async function handleGoogle(response) {
-        try {
-          const res = await fetch("/api/auth/google", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ credential: response.credential }),
+      function handleGoogle(response) {
+        fetch("/api/auth/google", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ credential: response.credential }),
+        })
+          .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
+          .then(({ ok, data }) => {
+            if (!ok) throw new Error(data.error || "Google login failed");
+            Auth.setAuth(data.token, data.user);
+            window.location.href = "/";
+          })
+          .catch((err) => {
+            const errorBox = document.getElementById("errorBox");
+            errorBox.textContent = err.message;
+            errorBox.classList.remove("hidden");
           });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || "Google login failed");
-          Auth.setAuth(data.token, data.user);
-          window.location.href = "/";
-        } catch (err) {
-          showError(err.message);
-        }
       }
+
+      window.onload = function () {
+        // IMPORTANT: use your real Client ID here
+        google.accounts.id.initialize({
+          client_id:
+            "471791152696-0vcn9dcvvd1ttdutn9fuq1gqjdnk8b17.apps.googleusercontent.com",
+          callback: handleGoogle,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
+
+        google.accounts.id.renderButton(document.getElementById("googleBtn"), {
+          type: "standard",
+          theme: "outline",
+          size: "large",
+          text: "signin_with", // or "signup_with" on signup page
+          shape: "rectangular",
+          logo_alignment: "left",
+          width: 320,
+        });
+      };
       window.handleGoogle = handleGoogle;
     </script>
   </body>
