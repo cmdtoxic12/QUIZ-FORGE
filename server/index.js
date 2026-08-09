@@ -19,6 +19,8 @@ const {
   verifyPassword,
   issueToken,
   optionalAuth,
+  requireAuth,
+  verifyGoogleToken,
 } = require("./lib/auth");
 const { generateQuiz } = require("./lib/quiz-service");
 const jsonStore = require("./store");
@@ -86,6 +88,13 @@ const upload = multer({
   },
 });
 
+app.get("/login", (_req, res) => {
+  res.sendFile(path.join(__dirname, "..", "public", "login.html"));
+});
+app.get("/signup", (_req, res) => {
+  res.sendFile(path.join(__dirname, "..", "public", "signup.html"));
+});
+
 app.get("/api/health", (_req, res) =>
   res.json({
     ok: true,
@@ -102,26 +111,35 @@ app.get("/api/quizzes", async (_req, res, next) => {
   }
 });
 
+// ===== Auth Routes =====
+
+// Register (email/password)
 app.post(
   "/api/auth/register",
   rateLimit({ windowMs: 60 * 60 * 1000, limit: 10 }),
   async (req, res, next) => {
     try {
       const credentials = validateCredentials(req.body || {});
-      if (await maybeAwait(store.findUserByEmail(credentials.email)))
+      if (await maybeAwait(store.findUserByEmail(credentials.email))) {
         throw apiError(409, "An account already exists for that email.");
+      }
       const user = await maybeAwait(
         store.createUser({
           email: credentials.email,
           passwordHash: await hashPassword(credentials.password),
         }),
       );
-      res.status(201).json({ user, token: issueToken(user) });
+      res.status(201).json({
+        user: { id: user.id, email: user.email },
+        token: issueToken(user),
+      });
     } catch (err) {
       next(err);
     }
   },
 );
+
+// Login (email/password)
 app.post(
   "/api/auth/login",
   rateLimit({ windowMs: 15 * 60 * 1000, limit: 20 }),
@@ -132,10 +150,11 @@ app.post(
       if (
         !user ||
         !(await verifyPassword(credentials.password, user.passwordHash))
-      )
+      ) {
         throw apiError(401, "Invalid email or password.");
+      }
       res.json({
-        user: { id: user.id, email: user.email, createdAt: user.createdAt },
+        user: { id: user.id, email: user.email },
         token: issueToken(user),
       });
     } catch (err) {
@@ -144,8 +163,68 @@ app.post(
   },
 );
 
+// Google Login / Signup
+app.post(
+  "/api/auth/google",
+  rateLimit({ windowMs: 15 * 60 * 1000, limit: 30 }),
+  async (req, res, next) => {
+    try {
+      const { credential } = req.body || {};
+      if (!credential) throw apiError(400, "Missing Google credential.");
+
+      const googleUser = await verifyGoogleToken(credential);
+
+      let user = await maybeAwait(store.findUserByEmail(googleUser.email));
+
+      if (!user) {
+        // Auto-create account for Google users
+        // Use a random unusable password hash
+        const randomPass = require("crypto").randomBytes(32).toString("hex");
+        user = await maybeAwait(
+          store.createUser({
+            email: googleUser.email,
+            passwordHash: await hashPassword(randomPass),
+          }),
+        );
+      }
+
+      res.json({
+        user: { id: user.id, email: user.email },
+        token: issueToken(user),
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// Current user
+app.get("/api/auth/me", optionalAuth, requireAuth, async (req, res) => {
+  res.json({
+    user: { id: req.user.sub, email: req.user.email },
+  });
+});
+
+// My Quizzes
+app.get(
+  "/api/quizzes/mine",
+  optionalAuth,
+  requireAuth,
+  async (req, res, next) => {
+    try {
+      const all = await maybeAwait(store.listQuizzes(200));
+      const mine = all.filter((q) => q.ownerId === req.user.sub);
+      res.json({ quizzes: mine });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 app.post(
   "/api/quiz/generate",
+  optionalAuth,
+  requireAuth, // ← hard protection
   rateLimit({ windowMs: 15 * 60 * 1000, limit: 20 }),
   upload.array("files", 5),
   async (req, res, next) => {
@@ -213,14 +292,12 @@ app.post(
           ownerId: req.user?.sub || null,
         }),
       );
-      res
-        .status(201)
-        .json({
-          code,
-          title: generated.title,
-          questionCount: generated.questions.length,
-          engine: generated.engine,
-        });
+      res.status(201).json({
+        code,
+        title: generated.title,
+        questionCount: generated.questions.length,
+        engine: generated.engine,
+      });
     } catch (err) {
       next(err);
     }
@@ -350,16 +427,14 @@ app.use((err, req, res, _next) => {
       error: err.message,
       stack: err.stack,
     });
-  res
-    .status(status)
-    .json({
-      error:
-        status >= 500
-          ? "Something went wrong while processing your request."
-          : err.message,
-      code: err.code || "INTERNAL_ERROR",
-      requestId: res.locals.requestId,
-    });
+  res.status(status).json({
+    error:
+      status >= 500
+        ? "Something went wrong while processing your request."
+        : err.message,
+    code: err.code || "INTERNAL_ERROR",
+    requestId: res.locals.requestId,
+  });
 });
 if (require.main === module)
   app.listen(config.port, () =>

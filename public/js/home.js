@@ -1,3 +1,14 @@
+// Require login
+(async () => {
+  const user = await Auth.requireLogin();
+  if (!user) return;
+
+  document.getElementById("userEmail").textContent = user.email;
+  document.getElementById("logoutBtn").onclick = Auth.logout;
+
+  // Load My Quizzes
+  loadMyQuizzes();
+})();
 const SAMPLE = `Photosynthesis is the process by which green plants convert light energy into chemical energy stored in glucose. The reaction takes place inside chloroplasts, organelles that contain the green pigment chlorophyll.
 Chlorophyll absorbs light most strongly in the blue and red parts of the spectrum, which is why leaves appear green to the human eye.
 The light-dependent reactions occur in the thylakoid membranes and split water molecules, releasing oxygen as a by-product. Roughly 330 billion tonnes of oxygen are produced by photosynthesis every year.
@@ -48,7 +59,7 @@ function renderFiles() {
         <div class="size">${formatSize(f.size)}</div>
       </div>
       <button type="button" data-i="${i}" aria-label="Remove">✕</button>
-    </li>`
+    </li>`,
     )
     .join("");
   fileList.querySelectorAll("button").forEach((btn) => {
@@ -61,13 +72,20 @@ function renderFiles() {
 }
 
 function escapeHtml(s) {
-  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  return s.replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        c
+      ],
+  );
 }
 
 function addFiles(list) {
   for (const f of list) {
     if (files.length >= 5) break;
-    if (!files.some((x) => x.name === f.name && x.size === f.size)) files.push(f);
+    if (!files.some((x) => x.name === f.name && x.size === f.size))
+      files.push(f);
   }
   renderFiles();
   errorBox.classList.add("hidden");
@@ -75,7 +93,10 @@ function addFiles(list) {
 
 dropzone.addEventListener("click", () => fileInput.click());
 dropzone.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); }
+  if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    fileInput.click();
+  }
 });
 dropzone.addEventListener("dragover", (e) => {
   e.preventDefault();
@@ -112,7 +133,9 @@ countInput.addEventListener("input", () => {
 
 document.querySelectorAll(".diff-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
-    document.querySelectorAll(".diff-btn").forEach((b) => b.classList.remove("active"));
+    document
+      .querySelectorAll(".diff-btn")
+      .forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     difficulty = btn.dataset.d;
   });
@@ -122,7 +145,8 @@ genBtn.addEventListener("click", async () => {
   if (loading) return;
   const pasted = pasteArea.value.trim();
   if (!files.length && pasted.length < 200) {
-    errorBox.textContent = "Add a document, or paste at least a couple of paragraphs of text.";
+    errorBox.textContent =
+      "Add a document, or paste at least a couple of paragraphs of text.";
     errorBox.classList.remove("hidden");
     return;
   }
@@ -144,9 +168,14 @@ genBtn.addEventListener("click", async () => {
     body.append("count", countInput.value);
     body.append("difficulty", difficulty);
 
-    const res = await fetch("/api/quiz/generate", { method: "POST", body });
+    const res = await fetch("/api/quiz/generate", {
+      method: "POST",
+      headers: Auth.authHeaders(),
+      body,
+    });
     const data = await res.json();
-    if (!res.ok || !data.code) throw new Error(data.error || "Generation failed.");
+    if (!res.ok || !data.code)
+      throw new Error(data.error || "Generation failed.");
     window.location.href = `/play/${data.code}`;
   } catch (err) {
     errorBox.textContent = err.message || "Generation failed.";
@@ -157,6 +186,38 @@ genBtn.addEventListener("click", async () => {
     clearInterval(stageTimer);
   }
 });
+
+async function loadMyQuizzes() {
+  try {
+    const res = await fetch("/api/quizzes/mine", {
+      headers: Auth.authHeaders(),
+    });
+    const data = await res.json();
+    const list = data.quizzes || [];
+    const grid = document.getElementById("myQuizzesGrid");
+    const empty = document.getElementById("myQuizzesEmpty");
+
+    if (!list.length) {
+      empty.classList.remove("hidden");
+      return;
+    }
+
+    grid.innerHTML = list
+      .slice(0, 8)
+      .map(
+        (q) => `
+      <a class="quiz-card glass" href="/play/${q.code}">
+        <div class="diff">${escapeHtml(q.difficulty || "mixed")}</div>
+        <div class="title">${escapeHtml(q.title)}</div>
+        <div class="meta">${q.questionCount || 0} questions · ${q.plays || 0} plays</div>
+        <span class="play">Play →</span>
+      </a>`,
+      )
+      .join("");
+  } catch {
+    /* ignore */
+  }
+}
 
 async function loadRecent() {
   try {
@@ -178,7 +239,7 @@ async function loadRecent() {
         <div class="title">${escapeHtml(q.title)}</div>
         <div class="meta">${q.questionCount} questions · ${q.plays || 0} plays</div>
         <span class="play">Play →</span>
-      </a>`
+      </a>`,
       )
       .join("");
   } catch {

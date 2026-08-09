@@ -3,25 +3,39 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta property="og:type" content="website">
-<meta property="og:site_name" content="QuizForge">
-<meta property="og:title" content="QuizForge — Turn documents into arcade quizzes">
-<meta property="og:description" content="Upload PDF, DOCX or notes. A local NLP (or LLM) agent forges timed quiz games with streaks, lifelines and leaderboards.">
-<meta property="og:url" content="https://quiz-forge-xi.vercel.app/">
-<meta property="og:image" content="https://quiz-forge-xi.vercel.app//logo.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="QuizForge — Turn documents into arcade quizzes">
-<meta name="twitter:description" content="Upload any document → instant timed arcade quiz with streaks & leaderboards.">
-<meta name="twitter:image" content="https://quiz-forge-xi.vercel.app/logo.png">
-    <title>QuizForge — Turn documents into arcade quizzes</title>
-    <link
-      rel="icon"
-      type="image/png"
-      href="logo.png"
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="QuizForge" />
+    <meta
+      property="og:title"
+      content="QuizForge — Turn documents into arcade quizzes"
     />
+    <meta
+      property="og:description"
+      content="Upload PDF, DOCX or notes. A local NLP (or LLM) agent forges timed quiz games with streaks, lifelines and leaderboards."
+    />
+    <meta property="og:url" content="https://quiz-forge-xi.vercel.app/" />
+    <meta
+      property="og:image"
+      content="https://quiz-forge-xi.vercel.app//logo.png"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="QuizForge — Turn documents into arcade quizzes"
+    />
+    <meta
+      name="twitter:description"
+      content="Upload any document → instant timed arcade quiz with streaks & leaderboards."
+    />
+    <meta
+      name="twitter:image"
+      content="https://quiz-forge-xi.vercel.app/logo.png"
+    />
+    <title>QuizForge — Turn documents into arcade quizzes</title>
+    <link rel="icon" type="image/png" href="logo.png" />
     <link rel="stylesheet" href="/css/styles.css" />
   </head>
   <body>
@@ -33,8 +47,15 @@
           <span>QuizForge</span>
         </a>
         <div class="nav-links">
+          <a href="#myQuizzes">My Quizzes</a>
           <a href="/library">Library</a>
-          <a href="#how">How it works</a>
+          <span
+            id="userEmail"
+            style="color: rgba(255, 255, 255, 0.5); font-size: 0.85rem"
+          ></span>
+          <button type="button" class="btn btn-ghost" id="logoutBtn">
+            Logout
+          </button>
         </div>
       </nav>
 
@@ -231,8 +252,26 @@
         <div class="recent-grid" id="recentGrid"></div>
       </section>
 
+      <section class="section" id="myQuizzes">
+        <h2>My Quizzes</h2>
+        <p class="sub">Quizzes you have forged</p>
+        <div class="recent-grid" id="myQuizzesGrid"></div>
+        <p
+          id="myQuizzesEmpty"
+          class="hidden"
+          style="
+            margin-top: 1.5rem;
+            color: rgba(255, 255, 255, 0.45);
+            text-align: center;
+          "
+        >
+          You haven't forged any quizzes yet.
+        </p>
+      </section>
+
       <footer>QuizForge · local NLP · HTML + Express</footer>
     </div>
+    <script src="/js/auth.js"></script>
     <script src="/js/home.js"></script>
   </body>
 </html>

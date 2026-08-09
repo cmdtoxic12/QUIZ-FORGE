@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sign up · QuizForge</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+      .auth-wrap {
+        max-width: 420px;
+        margin: 4rem auto;
+        padding: 0 1.25rem;
+      }
+      .auth-card {
+        padding: 2rem;
+      }
+      .auth-card h1 {
+        font-size: 1.75rem;
+        margin-bottom: 0.5rem;
+        text-align: center;
+      }
+      .auth-card p.sub {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.55);
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+      }
+      .auth-card label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 0.35rem;
+      }
+      .auth-card input {
+        width: 100%;
+        padding: 0.85rem 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(0, 0, 0, 0.3);
+        color: white;
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+      }
+      .auth-card input:focus {
+        outline: none;
+        border-color: #a78bfa;
+      }
+      .divider {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin: 1.25rem 0;
+        color: rgba(255, 255, 255, 0.35);
+        font-size: 0.8rem;
+      }
+      .divider::before,
+      .divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.12);
+      }
+      .google-btn-wrap {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1rem;
+      }
+      .switch {
+        text-align: center;
+        margin-top: 1.25rem;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.55);
+      }
+      .switch a {
+        color: #67e8f9;
+        text-decoration: none;
+        font-weight: 700;
+      }
+      .error-box {
+        margin-bottom: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="aurora"></div>
+    <div class="auth-wrap">
+      <div class="glass glow-ring auth-card">
+        <h1>Create account</h1>
+        <p class="sub">Start forging quizzes in seconds</p>
+
+        <div class="google-btn-wrap">
+          <div
+            id="g_id_onload"
+            data-client_id="YOUR_GOOGLE_CLIENT_ID"
+            data-callback="handleGoogle"
+            data-auto_prompt="false"
+          ></div>
+          <div
+            class="g_id_signin"
+            data-type="standard"
+            data-size="large"
+            data-theme="outline"
+            data-text="signup_with"
+            data-shape="rectangular"
+            data-logo_alignment="left"
+          ></div>
+        </div>
+
+        <div class="divider">or</div>
+
+        <div class="error-box hidden" id="errorBox"></div>
+
+        <form id="signupForm">
+          <label>Email</label>
+          <input
+            type="email"
+            id="email"
+            required
+            placeholder="you@example.com"
+          />
+          <label>Password</label>
+          <input
+            type="password"
+            id="password"
+            required
+            minlength="10"
+            placeholder="At least 10 characters"
+          />
+          <button type="submit" class="gen-btn" id="submitBtn">Sign up</button>
+        </form>
+
+        <p class="switch">
+          Already have an account? <a href="/login">Log in</a>
+        </p>
+      </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script>
+      if (Auth.getToken()) window.location.href = "/";
+
+      const errorBox = document.getElementById("errorBox");
+      const form = document.getElementById("signupForm");
+
+      function showError(msg) {
+        errorBox.textContent = msg;
+        errorBox.classList.remove("hidden");
+      }
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        errorBox.classList.add("hidden");
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+
+        try {
+          const res = await fetch("/api/auth/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Signup failed");
+          Auth.setAuth(data.token, data.user);
+          window.location.href = "/";
+        } catch (err) {
+          showError(err.message);
+        }
+      });
+
+      async function handleGoogle(response) {
+        try {
+          const res = await fetch("/api/auth/google", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ credential: response.credential }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Google signup failed");
+          Auth.setAuth(data.token, data.user);
+          window.location.href = "/";
+        } catch (err) {
+          showError(err.message);
+        }
+      }
+      window.handleGoogle = handleGoogle;
+    </script>
+  </body>
+</html>
