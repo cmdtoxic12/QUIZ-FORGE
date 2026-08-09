@@ -13,7 +13,6 @@ const {
   requestId,
   apiError,
 } = require("./lib/security");
-const { verifyFirebaseToken } = require("./lib/firebase");
 const {
   validateCredentials,
   hashPassword,
@@ -114,6 +113,8 @@ app.get("/api/quizzes", async (_req, res, next) => {
 
 // ===== Auth Routes =====
 
+const { verifyFirebaseToken } = require("./lib/firebase");
+
 app.post("/api/auth/firebase", async (req, res, next) => {
   try {
     const { idToken } = req.body || {};
@@ -138,7 +139,7 @@ app.post("/api/auth/firebase", async (req, res, next) => {
         store.createUser({
           email,
           passwordHash: await hashPassword(randomPass),
-        })
+        }),
       );
     }
 
@@ -500,7 +501,8 @@ app.get("/api/admin/stats", requireAdmin, async (req, res, next) => {
     let allAttempts = [];
     for (const q of quizzes) {
       try {
-        const leaderboard = (await maybeAwait(store.getLeaderboard(q.code))) || [];
+        const leaderboard =
+          (await maybeAwait(store.getLeaderboard(q.code))) || [];
         leaderboard.forEach((attempt) => {
           allAttempts.push({
             ...attempt,
@@ -527,10 +529,10 @@ app.get("/api/admin/stats", requireAdmin, async (req, res, next) => {
       // Visits
       try {
         const totalRes = await store.pool.query(
-          "SELECT COUNT(*)::int AS count FROM visits"
+          "SELECT COUNT(*)::int AS count FROM visits",
         );
         const uniqueRes = await store.pool.query(
-          "SELECT COUNT(DISTINCT visitor_id)::int AS count FROM visits"
+          "SELECT COUNT(DISTINCT visitor_id)::int AS count FROM visits",
         );
         totalVisitors = totalRes.rows[0]?.count || 0;
         uniqueVisitors = uniqueRes.rows[0]?.count || 0;
@@ -567,7 +569,7 @@ app.get("/api/admin/stats", requireAdmin, async (req, res, next) => {
       // Users
       try {
         const usersRes = await store.pool.query(
-          "SELECT COUNT(*)::int AS count FROM users"
+          "SELECT COUNT(*)::int AS count FROM users",
         );
         totalUsers = usersRes.rows[0]?.count || 0;
 
@@ -602,7 +604,7 @@ app.get("/api/admin/stats", requireAdmin, async (req, res, next) => {
         const dayStart = todayStart - i * oneDay;
         const dayEnd = dayStart + oneDay;
         const dayVisits = visits.filter(
-          (v) => v.at >= dayStart && v.at < dayEnd
+          (v) => v.at >= dayStart && v.at < dayEnd,
         );
         last7Days.push({
           day: new Date(dayStart).toISOString().slice(0, 10),
@@ -621,7 +623,7 @@ app.get("/api/admin/stats", requireAdmin, async (req, res, next) => {
         avgScore: allAttempts.length
           ? Math.round(
               allAttempts.reduce((s, a) => s + (a.score || 0), 0) /
-                allAttempts.length
+                allAttempts.length,
             )
           : 0,
         totalVisitors,
