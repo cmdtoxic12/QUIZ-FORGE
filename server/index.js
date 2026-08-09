@@ -533,21 +533,23 @@ app.post("/api/admin/login", (req, res) => {
 // ----- Admin Stats -----
 app.get("/api/admin/stats", requireAdmin, async (req, res, next) => {
   try {
-    const quizzes = await maybeAwait(store.listQuizzes(500));
+    const quizzes = (await maybeAwait(store.listQuizzes(500))) || [];
     const totalQuizzes = quizzes.length;
     const totalPlays = quizzes.reduce((sum, q) => sum + (q.plays || 0), 0);
 
     // Collect all attempts
     let allAttempts = [];
     for (const q of quizzes) {
-      const leaderboard = await maybeAwait(store.getLeaderboard(q.code));
-      leaderboard.forEach((attempt) => {
-        allAttempts.push({
-          ...attempt,
-          quizCode: q.code,
-          quizTitle: q.title,
+      try {
+        const leaderboard = (await maybeAwait(store.getLeaderboard(q.code))) || [];
+        leaderboard.forEach((attempt) => {
+          allAttempts.push({
+            ...attempt,
+            quizCode: q.code,
+            quizTitle: q.title,
+          });
         });
-      });
+      } catch (_) {}
     }
     allAttempts.sort((a, b) => (b.score || 0) - (a.score || 0));
 
@@ -558,45 +560,75 @@ app.get("/api/admin/stats", requireAdmin, async (req, res, next) => {
     let todayUnique = 0;
     let last7Days = [];
 
+    // ===== User Stats =====
+    let totalUsers = 0;
+    let recentUsers = [];
+
     if (config.storeDriver === "postgres" && store.pool) {
-      const totalRes = await store.pool.query(
-        "SELECT COUNT(*)::int AS count FROM visits",
-      );
-      const uniqueRes = await store.pool.query(
-        "SELECT COUNT(DISTINCT visitor_id)::int AS count FROM visits",
-      );
-      totalVisitors = totalRes.rows[0]?.count || 0;
-      uniqueVisitors = uniqueRes.rows[0]?.count || 0;
+      // Visits
+      try {
+        const totalRes = await store.pool.query(
+          "SELECT COUNT(*)::int AS count FROM visits"
+        );
+        const uniqueRes = await store.pool.query(
+          "SELECT COUNT(DISTINCT visitor_id)::int AS count FROM visits"
+        );
+        totalVisitors = totalRes.rows[0]?.count || 0;
+        uniqueVisitors = uniqueRes.rows[0]?.count || 0;
 
-      const todayRes = await store.pool.query(`
-        SELECT 
-          COUNT(*)::int AS total,
-          COUNT(DISTINCT visitor_id)::int AS unique
-        FROM visits
-        WHERE created_at >= CURRENT_DATE
-      `);
-      todayVisitors = todayRes.rows[0]?.total || 0;
-      todayUnique = todayRes.rows[0]?.unique || 0;
+        const todayRes = await store.pool.query(`
+          SELECT 
+            COUNT(*)::int AS total,
+            COUNT(DISTINCT visitor_id)::int AS unique
+          FROM visits
+          WHERE created_at >= CURRENT_DATE
+        `);
+        todayVisitors = todayRes.rows[0]?.total || 0;
+        todayUnique = todayRes.rows[0]?.unique || 0;
 
-      const weekRes = await store.pool.query(`
-        SELECT 
-          DATE(created_at) AS day,
-          COUNT(*)::int AS total,
-          COUNT(DISTINCT visitor_id)::int AS unique
-        FROM visits
-        WHERE created_at >= CURRENT_DATE - INTERVAL '6 days'
-        GROUP BY DATE(created_at)
-        ORDER BY day ASC
-      `);
-      last7Days = weekRes.rows.map((r) => ({
-        day: r.day,
-        total: r.total,
-        unique: r.unique,
-      }));
+        const weekRes = await store.pool.query(`
+          SELECT 
+            DATE(created_at) AS day,
+            COUNT(*)::int AS total,
+            COUNT(DISTINCT visitor_id)::int AS unique
+          FROM visits
+          WHERE created_at >= CURRENT_DATE - INTERVAL '6 days'
+          GROUP BY DATE(created_at)
+          ORDER BY day ASC
+        `);
+        last7Days = weekRes.rows.map((r) => ({
+          day: r.day,
+          total: r.total,
+          unique: r.unique,
+        }));
+      } catch (err) {
+        console.error("Visits query failed:", err.message);
+      }
+
+      // Users
+      try {
+        const usersRes = await store.pool.query(
+          "SELECT COUNT(*)::int AS count FROM users"
+        );
+        totalUsers = usersRes.rows[0]?.count || 0;
+
+        const recentUsersRes = await store.pool.query(`
+          SELECT id, email, created_at 
+          FROM users 
+          ORDER BY created_at DESC 
+          LIMIT 15
+        `);
+        recentUsers = recentUsersRes.rows.map((u) => ({
+          id: u.id,
+          email: u.email,
+          createdAt: u.created_at,
+        }));
+      } catch (err) {
+        console.error("Users query failed:", err.message);
+      }
     } else {
-      // In-memory fallback
+      // In-memory fallback for visits
       const visits = global.__visits || [];
-      const now = Date.now();
       const oneDay = 24 * 60 * 60 * 1000;
       const todayStart = new Date().setHours(0, 0, 0, 0);
 
@@ -611,7 +643,7 @@ app.get("/api/admin/stats", requireAdmin, async (req, res, next) => {
         const dayStart = todayStart - i * oneDay;
         const dayEnd = dayStart + oneDay;
         const dayVisits = visits.filter(
-          (v) => v.at >= dayStart && v.at < dayEnd,
+          (v) => v.at >= dayStart && v.at < dayEnd
         );
         last7Days.push({
           day: new Date(dayStart).toISOString().slice(0, 10),
@@ -621,6 +653,7 @@ app.get("/api/admin/stats", requireAdmin, async (req, res, next) => {
       }
     }
 
+    // ===== Response =====
     res.json({
       overview: {
         totalQuizzes,
@@ -629,7 +662,7 @@ app.get("/api/admin/stats", requireAdmin, async (req, res, next) => {
         avgScore: allAttempts.length
           ? Math.round(
               allAttempts.reduce((s, a) => s + (a.score || 0), 0) /
-                allAttempts.length,
+                allAttempts.length
             )
           : 0,
         totalVisitors,
@@ -647,6 +680,7 @@ app.get("/api/admin/stats", requireAdmin, async (req, res, next) => {
         questionCount: q.questionCount,
         difficulty: q.difficulty,
         engine: q.engine,
+        ownerId: q.ownerId || null,
         createdAt: q.createdAt,
       })),
       topQuizzes: [...quizzes]
@@ -661,30 +695,6 @@ app.get("/api/admin/stats", requireAdmin, async (req, res, next) => {
     });
   } catch (err) {
     next(err);
-  }
-
-  // Inside /api/admin/stats
-
-  let totalUsers = 0;
-  let recentUsers = [];
-
-  if (config.storeDriver === "postgres" && store.pool) {
-    const usersRes = await store.pool.query(
-      "SELECT COUNT(*)::int AS count FROM users",
-    );
-    totalUsers = usersRes.rows[0]?.count || 0;
-
-    const recentUsersRes = await store.pool.query(`
-    SELECT id, email, created_at 
-    FROM users 
-    ORDER BY created_at DESC 
-    LIMIT 15
-  `);
-    recentUsers = recentUsersRes.rows.map((u) => ({
-      id: u.id,
-      email: u.email,
-      createdAt: u.created_at,
-    }));
   }
 });
 
