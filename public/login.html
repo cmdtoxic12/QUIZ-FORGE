@@ -1,200 +1,115 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Login · QuizForge</title>
-    <link rel="stylesheet" href="/css/styles.css" />
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <style>
-      .auth-wrap {
-        max-width: 420px;
-        margin: 4rem auto;
-        padding: 0 1.25rem;
-      }
-      .auth-card {
-        padding: 2rem;
-      }
-      .auth-card h1 {
-        font-size: 1.75rem;
-        margin-bottom: 0.5rem;
-        text-align: center;
-      }
-      .auth-card p.sub {
-        text-align: center;
-        color: rgba(255, 255, 255, 0.55);
-        margin-bottom: 1.5rem;
-        font-size: 0.9rem;
-      }
-      .auth-card label {
-        display: block;
-        font-size: 0.8rem;
-        font-weight: 700;
-        color: rgba(255, 255, 255, 0.6);
-        margin-bottom: 0.35rem;
-      }
-      .auth-card input {
-        width: 100%;
-        padding: 0.85rem 1rem;
-        border-radius: 0.75rem;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        background: rgba(0, 0, 0, 0.3);
-        color: white;
-        font-size: 0.95rem;
-        margin-bottom: 1rem;
-      }
-      .auth-card input:focus {
-        outline: none;
-        border-color: #a78bfa;
-      }
-      .divider {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin: 1.25rem 0;
-        color: rgba(255, 255, 255, 0.35);
-        font-size: 0.8rem;
-      }
-      .divider::before,
-      .divider::after {
-        content: "";
-        flex: 1;
-        height: 1px;
-        background: rgba(255, 255, 255, 0.12);
-      }
-      .google-btn-wrap {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 1rem;
-      }
-      .switch {
-        text-align: center;
-        margin-top: 1.25rem;
-        font-size: 0.9rem;
-        color: rgba(255, 255, 255, 0.55);
-      }
-      .switch a {
-        color: #67e8f9;
-        text-decoration: none;
-        font-weight: 700;
-      }
-      .error-box {
-        margin-bottom: 1rem;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="aurora"></div>
-    <div class="auth-wrap">
-      <div class="glass glow-ring auth-card">
-        <h1>Welcome back</h1>
-        <p class="sub">Log in to forge quizzes</p>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login · QuizForge</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <style>
+    .auth-wrap { max-width: 420px; margin: 4rem auto; padding: 0 1.25rem; }
+    .auth-card { padding: 2rem; }
+    .auth-card h1 { font-size: 1.75rem; margin-bottom: 0.5rem; text-align: center; }
+    .auth-card p.sub { text-align: center; color: rgba(255,255,255,0.55); margin-bottom: 1.5rem; font-size: 0.9rem; }
+    .auth-card label { display: block; font-size: 0.8rem; font-weight: 700; color: rgba(255,255,255,0.6); margin-bottom: 0.35rem; }
+    .auth-card input {
+      width: 100%; padding: 0.85rem 1rem; border-radius: 0.75rem;
+      border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.3);
+      color: white; font-size: 0.95rem; margin-bottom: 1rem;
+    }
+    .divider {
+      display: flex; align-items: center; gap: 1rem;
+      margin: 1.25rem 0; color: rgba(255,255,255,0.35); font-size: 0.8rem;
+    }
+    .divider::before, .divider::after {
+      content: ""; flex: 1; height: 1px; background: rgba(255,255,255,0.12);
+    }
+    .switch { text-align: center; margin-top: 1.25rem; font-size: 0.9rem; color: rgba(255,255,255,0.55); }
+    .switch a { color: #67e8f9; text-decoration: none; font-weight: 700; }
+    .error-box { margin-bottom: 1rem; }
+    .google-btn {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      border-radius: 0.75rem;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.06);
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="aurora"></div>
+  <div class="auth-wrap">
+    <div class="glass glow-ring auth-card">
+      <h1>Welcome back</h1>
+      <p class="sub">Log in to forge quizzes</p>
 
-        <div class="google-btn-wrap">
-          <div id="googleBtn"></div>
-        </div>
+      <button type="button" class="google-btn" id="googleBtn">Continue with Google</button>
 
-        <div class="divider">or</div>
+      <div class="divider">or</div>
 
-        <div class="error-box hidden" id="errorBox"></div>
+      <div class="error-box hidden" id="errorBox"></div>
 
-        <form id="loginForm">
-          <label>Email</label>
-          <input
-            type="email"
-            id="email"
-            required
-            placeholder="you@example.com"
-          />
-          <label>Password</label>
-          <input
-            type="password"
-            id="password"
-            required
-            minlength="10"
-            placeholder="At least 10 characters"
-          />
-          <button type="submit" class="gen-btn" id="submitBtn">Log in</button>
-        </form>
+      <form id="loginForm">
+        <label>Email</label>
+        <input type="email" id="email" required placeholder="you@example.com" />
+        <label>Password</label>
+        <input type="password" id="password" required minlength="6" placeholder="Your password" />
+        <button type="submit" class="gen-btn">Log in</button>
+      </form>
 
-        <p class="switch">No account? <a href="/signup">Sign up</a></p>
-      </div>
+      <p class="switch">No account? <a href="/signup">Sign up</a></p>
     </div>
+  </div>
 
-    <script src="/js/auth.js"></script>
-    <script>
-      // Redirect if already logged in
-      if (Auth.getToken()) window.location.href = "/";
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="/js/firebase-config.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    if (Auth.getToken()) window.location.href = "/";
 
-      const errorBox = document.getElementById("errorBox");
-      const form = document.getElementById("loginForm");
+    firebase.initializeApp(window.FIREBASE_CONFIG);
+    const auth = firebase.auth();
+    window.firebaseAuth = auth;
 
-      function showError(msg) {
-        errorBox.textContent = msg;
-        errorBox.classList.remove("hidden");
+    const errorBox = document.getElementById("errorBox");
+    function showError(msg) {
+      errorBox.textContent = msg;
+      errorBox.classList.remove("hidden");
+    }
+
+    // Email/password login
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      errorBox.classList.add("hidden");
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      try {
+        const cred = await auth.signInWithEmailAndPassword(email, password);
+        const idToken = await cred.user.getIdToken();
+        await Auth.exchangeFirebaseToken(idToken);
+        window.location.href = "/";
+      } catch (err) {
+        showError(err.message || "Login failed");
       }
+    });
 
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        errorBox.classList.add("hidden");
-        const email = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value;
-
-        try {
-          const res = await fetch("/api/auth/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }),
-          });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || "Login failed");
-          Auth.setAuth(data.token, data.user);
-          window.location.href = "/";
-        } catch (err) {
-          showError(err.message);
-        }
-      });
-
-      function handleGoogle(response) {
-        fetch("/api/auth/google", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ credential: response.credential }),
-        })
-          .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
-          .then(({ ok, data }) => {
-            if (!ok) throw new Error(data.error || "Google login failed");
-            Auth.setAuth(data.token, data.user);
-            window.location.href = "/";
-          })
-          .catch((err) => {
-            const errorBox = document.getElementById("errorBox");
-            errorBox.textContent = err.message;
-            errorBox.classList.remove("hidden");
-          });
+    // Google login
+    document.getElementById("googleBtn").addEventListener("click", async () => {
+      errorBox.classList.add("hidden");
+      try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        const cred = await auth.signInWithPopup(provider);
+        const idToken = await cred.user.getIdToken();
+        await Auth.exchangeFirebaseToken(idToken);
+        window.location.href = "/";
+      } catch (err) {
+        showError(err.message || "Google login failed");
       }
-
-      window.onload = function () {
-        // IMPORTANT: use your real Client ID here
-        google.accounts.id.initialize({
-          client_id:
-            "471791152696-0vcn9dcvvd1ttdutn9fuq1gqjdnk8b17.apps.googleusercontent.com",
-          callback: handleGoogle,
-          auto_select: false,
-          cancel_on_tap_outside: true,
-        });
-
-        google.accounts.id.renderButton(document.getElementById("googleBtn"), {
-          type: "standard",
-          theme: "outline",
-          size: "large",
-          text: "signin_with", // or "signup_with" on signup page
-          shape: "rectangular",
-          logo_alignment: "left",
-          width: 320,
-        });
-      };
-      window.handleGoogle = handleGoogle;
-    </script>
-  </body>
+    });
+  </script>
+</body>
 </html>

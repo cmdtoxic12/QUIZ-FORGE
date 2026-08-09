@@ -13,6 +13,7 @@ const {
   requestId,
   apiError,
 } = require("./lib/security");
+const { verifyFirebaseToken } = require("./lib/firebase");
 const {
   validateCredentials,
   hashPassword,
@@ -113,90 +114,48 @@ app.get("/api/quizzes", async (_req, res, next) => {
 
 // ===== Auth Routes =====
 
-// Register (email/password)
-app.post(
-  "/api/auth/register",
-  rateLimit({ windowMs: 60 * 60 * 1000, limit: 10 }),
-  async (req, res, next) => {
-    try {
-      const credentials = validateCredentials(req.body || {});
-      if (await maybeAwait(store.findUserByEmail(credentials.email))) {
-        throw apiError(409, "An account already exists for that email.");
-      }
-      const user = await maybeAwait(
+app.post("/api/auth/firebase", async (req, res, next) => {
+  try {
+    const { idToken } = req.body || {};
+    if (!idToken) {
+      return res.status(400).json({ error: "Missing Firebase ID token" });
+    }
+
+    const decoded = await verifyFirebaseToken(idToken);
+    const email = (decoded.email || "").toLowerCase();
+    const uid = decoded.uid;
+
+    if (!email) {
+      return res.status(400).json({ error: "Firebase account has no email" });
+    }
+
+    // Find or create user in Postgres
+    let user = await maybeAwait(store.findUserByEmail(email));
+
+    if (!user) {
+      const randomPass = require("crypto").randomBytes(32).toString("hex");
+      user = await maybeAwait(
         store.createUser({
-          email: credentials.email,
-          passwordHash: await hashPassword(credentials.password),
-        }),
+          email,
+          passwordHash: await hashPassword(randomPass),
+        })
       );
-      res.status(201).json({
-        user: { id: user.id, email: user.email },
-        token: issueToken(user),
-      });
-    } catch (err) {
-      next(err);
     }
-  },
-);
 
-// Login (email/password)
-app.post(
-  "/api/auth/login",
-  rateLimit({ windowMs: 15 * 60 * 1000, limit: 20 }),
-  async (req, res, next) => {
-    try {
-      const credentials = validateCredentials(req.body || {});
-      const user = await maybeAwait(store.findUserByEmail(credentials.email));
-      if (
-        !user ||
-        !(await verifyPassword(credentials.password, user.passwordHash))
-      ) {
-        throw apiError(401, "Invalid email or password.");
-      }
-      res.json({
-        user: { id: user.id, email: user.email },
-        token: issueToken(user),
-      });
-    } catch (err) {
-      next(err);
-    }
-  },
-);
-
-// Google Login / Signup
-app.post(
-  "/api/auth/google",
-  rateLimit({ windowMs: 15 * 60 * 1000, limit: 30 }),
-  async (req, res, next) => {
-    try {
-      const { credential } = req.body || {};
-      if (!credential) throw apiError(400, "Missing Google credential.");
-
-      const googleUser = await verifyGoogleToken(credential);
-
-      let user = await maybeAwait(store.findUserByEmail(googleUser.email));
-
-      if (!user) {
-        // Auto-create account for Google users
-        // Use a random unusable password hash
-        const randomPass = require("crypto").randomBytes(32).toString("hex");
-        user = await maybeAwait(
-          store.createUser({
-            email: googleUser.email,
-            passwordHash: await hashPassword(randomPass),
-          }),
-        );
-      }
-
-      res.json({
-        user: { id: user.id, email: user.email },
-        token: issueToken(user),
-      });
-    } catch (err) {
-      next(err);
-    }
-  },
-);
+    // Optional: store firebase uid in memory/response
+    res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        firebaseUid: uid,
+      },
+      token: issueToken(user),
+    });
+  } catch (err) {
+    console.error("Firebase auth error:", err.message);
+    next(err);
+  }
+});
 
 // Current user
 app.get("/api/auth/me", optionalAuth, requireAuth, async (req, res) => {

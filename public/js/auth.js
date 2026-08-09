@@ -51,11 +51,25 @@ async function requireLogin() {
 }
 
 function logout() {
+  if (window.firebaseAuth) {
+    window.firebaseAuth.signOut().catch(() => {});
+  }
   clearAuth();
   window.location.href = "/login";
 }
 
-// Expose globally
+async function exchangeFirebaseToken(idToken) {
+  const res = await fetch("/api/auth/firebase", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idToken }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Auth failed");
+  setAuth(data.token, data.user);
+  return data.user;
+}
+
 window.Auth = {
   getToken,
   getUser,
@@ -64,4 +78,5 @@ window.Auth = {
   authHeaders,
   requireLogin,
   logout,
+  exchangeFirebaseToken,
 };
