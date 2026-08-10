@@ -156,8 +156,6 @@
     <script src="/js/firebase-config.js"></script>
     <script src="/js/auth.js"></script>
     <script>
-      if (Auth.getToken()) window.location.href = "/";
-
       firebase.initializeApp(window.FIREBASE_CONFIG);
       const auth = firebase.auth();
       window.firebaseAuth = auth;
@@ -166,6 +164,11 @@
       function showError(msg) {
         errorBox.textContent = msg;
         errorBox.classList.remove("hidden");
+      }
+
+      // If already has QuizForge token, go home
+      if (Auth.getToken()) {
+        window.location.replace("/");
       }
 
       // Reveal password
@@ -178,60 +181,67 @@
         });
       });
 
+      // Shared finish function
+      async function completeLogin(user) {
+        try {
+          const idToken = await user.getIdToken(true);
+          await Auth.exchangeFirebaseToken(idToken);
+          window.location.replace("/");
+        } catch (err) {
+          console.error("Token exchange failed:", err);
+          showError(err.message || "Failed to complete login");
+        }
+      }
+
+      // 1) Handle redirect result
+      auth
+        .getRedirectResult()
+        .then(async (result) => {
+          if (result && result.user) {
+            errorBox.textContent = "Finishing Google sign-in...";
+            errorBox.classList.remove("hidden");
+            await completeLogin(result.user);
+          }
+        })
+        .catch((err) => {
+          console.error("Redirect error:", err);
+          if (err.code !== "auth/popup-closed-by-user") {
+            showError(err.message || "Google sign-in failed");
+          }
+        });
+
+      // 2) Backup: if Firebase already signed in but QuizForge token missing
+      auth.onAuthStateChanged(async (user) => {
+        if (user && !Auth.getToken()) {
+          await completeLogin(user);
+        }
+      });
+
       // Email/password login
       document
         .getElementById("loginForm")
         .addEventListener("submit", async (e) => {
           e.preventDefault();
           errorBox.classList.add("hidden");
+
           const email = document.getElementById("email").value.trim();
           const password = document.getElementById("password").value;
 
           try {
             const cred = await auth.signInWithEmailAndPassword(email, password);
-            const idToken = await cred.user.getIdToken();
-            await Auth.exchangeFirebaseToken(idToken);
-            window.location.href = "/";
+            await completeLogin(cred.user);
           } catch (err) {
             showError(err.message || "Login failed");
           }
         });
 
-      // Show a temporary status while finishing Google redirect
-      async function finishRedirectLogin() {
-        try {
-          const result = await auth.getRedirectResult();
-
-          // No redirect result = normal page open
-          if (!result || !result.user) return;
-
-          // Optional: show status
-          showError("Finishing Google sign-in...");
-
-          const idToken = await result.user.getIdToken(true);
-          await Auth.exchangeFirebaseToken(idToken);
-
-          // Success
-          window.location.replace("/");
-        } catch (err) {
-          console.error("Redirect login error:", err);
-          if (err.code === "auth/popup-closed-by-user") return;
-          showError(err.message || "Google sign-in failed");
-        }
-      }
-
-      // Run this as soon as page loads
-      finishRedirectLogin();
-
-      // Google button -> redirect flow
+      // Google redirect
       document
         .getElementById("googleBtn")
         .addEventListener("click", async () => {
           errorBox.classList.add("hidden");
           try {
             const provider = new firebase.auth.GoogleAuthProvider();
-            // Remember where user started (login or signup)
-            sessionStorage.setItem("qf_auth_return", window.location.pathname);
             await auth.signInWithRedirect(provider);
           } catch (err) {
             showError(err.message || "Google login failed");
