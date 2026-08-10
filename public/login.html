@@ -212,6 +212,42 @@
             showError(err.message || "Google login failed");
           }
         });
+      // Complete login helper
+      async function completeLogin(user) {
+        const idToken = await user.getIdToken(true);
+        await Auth.exchangeFirebaseToken(idToken);
+        window.location.replace("/");
+      }
+
+      // Handle redirect return
+      auth
+        .getRedirectResult()
+        .then((result) => {
+          if (result && result.user) completeLogin(result.user);
+        })
+        .catch((err) => {
+          if (err.code !== "auth/popup-closed-by-user") {
+            showError(err.message || "Google sign-in failed");
+          }
+        });
+
+      // Backup
+      auth.onAuthStateChanged((user) => {
+        if (user && !Auth.getToken()) completeLogin(user);
+      });
+
+      // Google button
+      document
+        .getElementById("googleBtn")
+        .addEventListener("click", async () => {
+          errorBox.classList.add("hidden");
+          try {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            await auth.signInWithRedirect(provider);
+          } catch (err) {
+            showError(err.message || "Google signup failed");
+          }
+        });
     </script>
   </body>
 </html>
