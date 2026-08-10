@@ -59,7 +59,7 @@ function normalizeQuestion(question, index) {
       ...question,
       id: question.id || `q_${index + 1}`,
       points: Number(question.points) || defaults.points,
-      seconds: Number(question.seconds) || defaults.seconds,
+      seconds: defaults.seconds,
       explanation:
         question.explanation || "See the source material for context.",
       hint: question.hint || "Review the relevant section.",
