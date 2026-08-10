@@ -91,21 +91,6 @@
       .match-msg.bad {
         color: #fb7185;
       }
-      .divider {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin: 1.25rem 0;
-        color: rgba(255, 255, 255, 0.35);
-        font-size: 0.8rem;
-      }
-      .divider::before,
-      .divider::after {
-        content: "";
-        flex: 1;
-        height: 1px;
-        background: rgba(255, 255, 255, 0.12);
-      }
       .switch {
         text-align: center;
         margin-top: 1.25rem;
@@ -122,16 +107,6 @@
         color: #fb7185;
         font-size: 0.85rem;
       }
-      .google-btn {
-        width: 100%;
-        padding: 0.85rem 1rem;
-        border-radius: 0.75rem;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        background: rgba(255, 255, 255, 0.06);
-        color: white;
-        font-weight: 700;
-        cursor: pointer;
-      }
       .gen-btn:disabled {
         opacity: 0.5;
         cursor: not-allowed;
@@ -144,12 +119,6 @@
       <div class="glass glow-ring auth-card">
         <h1>Create account</h1>
         <p class="sub">Start forging quizzes in seconds</p>
-
-        <button type="button" class="google-btn" id="googleBtn">
-          Sign up with Google
-        </button>
-
-        <div class="divider">or</div>
 
         <div class="error-box hidden" id="errorBox"></div>
 
@@ -170,18 +139,16 @@
               type="password"
               id="password"
               required
-              minlength="6"
-              placeholder="Create a strong password"
+              minlength="10"
+              placeholder="At least 10 characters"
             />
             <button type="button" class="toggle-pass" data-target="password">
               Show
             </button>
           </div>
 
-          <ul class="reqs" id="reqs">
-            <li id="req-len">At least 6 characters</li>
-            <li id="req-upper">One uppercase letter (A–Z)</li>
-            <li id="req-special">One symbol (!@#$%...)</li>
+          <ul class="reqs">
+            <li id="req-len">At least 10 characters</li>
           </ul>
 
           <label for="confirm">Confirm password</label>
@@ -190,7 +157,7 @@
               type="password"
               id="confirm"
               required
-              minlength="6"
+              minlength="10"
               placeholder="Re-enter password"
             />
             <button type="button" class="toggle-pass" data-target="confirm">
@@ -210,16 +177,9 @@
       </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-    <script src="/js/firebase-config.js"></script>
     <script src="/js/auth.js"></script>
     <script>
-      if (Auth.getToken()) window.location.href = "/";
-
-      firebase.initializeApp(window.FIREBASE_CONFIG);
-      const auth = firebase.auth();
-      window.firebaseAuth = auth;
+      if (Auth.getToken()) window.location.replace("/");
 
       const errorBox = document.getElementById("errorBox");
       const passwordInput = document.getElementById("password");
@@ -232,37 +192,23 @@
         errorBox.classList.remove("hidden");
       }
 
-      // Reveal password buttons
       document.querySelectorAll(".toggle-pass").forEach((btn) => {
         btn.addEventListener("click", () => {
           const input = document.getElementById(btn.dataset.target);
-          const hidden = input.type === "password";
-          input.type = hidden ? "text" : "password";
-          btn.textContent = hidden ? "Hide" : "Show";
+          const show = input.type === "password";
+          input.type = show ? "text" : "password";
+          btn.textContent = show ? "Hide" : "Show";
         });
       });
 
-      function validatePassword() {
-        const value = passwordInput.value;
+      function validate() {
+        const password = passwordInput.value;
         const confirm = confirmInput.value;
 
-        const checks = {
-          len: value.length >= 6,
-          upper: /[A-Z]/.test(value),
-          special: /[^A-Za-z0-9]/.test(value),
-        };
+        const longEnough = password.length >= 10;
+        document.getElementById("req-len").classList.toggle("ok", longEnough);
 
-        document.getElementById("req-len").classList.toggle("ok", checks.len);
-        document
-          .getElementById("req-upper")
-          .classList.toggle("ok", checks.upper);
-        document
-          .getElementById("req-special")
-          .classList.toggle("ok", checks.special);
-
-        const allReqs = checks.len && checks.upper && checks.special;
-        const matches = confirm.length > 0 && value === confirm;
-
+        const matches = confirm.length > 0 && password === confirm;
         if (!confirm) {
           matchMsg.textContent = "Passwords must match";
           matchMsg.className = "match-msg";
@@ -274,82 +220,36 @@
           matchMsg.className = "match-msg bad";
         }
 
-        submitBtn.disabled = !(allReqs && matches);
-        return allReqs && matches;
+        submitBtn.disabled = !(longEnough && matches);
+        return longEnough && matches;
       }
 
-      passwordInput.addEventListener("input", validatePassword);
-      confirmInput.addEventListener("input", validatePassword);
+      passwordInput.addEventListener("input", validate);
+      confirmInput.addEventListener("input", validate);
 
-      // Email/password signup
       document
         .getElementById("signupForm")
         .addEventListener("submit", async (e) => {
           e.preventDefault();
           errorBox.classList.add("hidden");
-
-          if (!validatePassword()) {
-            showError("Please meet all password requirements.");
-            return;
-          }
+          if (!validate()) return;
 
           const email = document.getElementById("email").value.trim();
           const password = passwordInput.value;
 
           try {
-            const cred = await auth.createUserWithEmailAndPassword(
-              email,
-              password,
-            );
-            const idToken = await cred.user.getIdToken();
-            await Auth.exchangeFirebaseToken(idToken);
-            window.location.href = "/";
+            const res = await fetch("/api/auth/register", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email, password }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Signup failed");
+
+            Auth.setAuth(data.token, data.user);
+            window.location.replace("/");
           } catch (err) {
-            if (err.code === "auth/password-does-not-meet-requirements") {
-              showError(
-                "Password must include an uppercase letter and a symbol (e.g. Test123!)",
-              );
-            } else if (err.code === "auth/email-already-in-use") {
-              showError("That email is already registered. Try logging in.");
-            } else {
-              showError(err.message || "Signup failed");
-            }
-          }
-        });
-      // Complete login helper
-      async function completeLogin(user) {
-        const idToken = await user.getIdToken(true);
-        await Auth.exchangeFirebaseToken(idToken);
-        window.location.replace("/");
-      }
-
-      // Handle redirect return
-      auth
-        .getRedirectResult()
-        .then((result) => {
-          if (result && result.user) completeLogin(result.user);
-        })
-        .catch((err) => {
-          if (err.code !== "auth/popup-closed-by-user") {
-            showError(err.message || "Google sign-in failed");
-          }
-        });
-
-      // Backup
-      auth.onAuthStateChanged((user) => {
-        if (user && !Auth.getToken()) completeLogin(user);
-      });
-
-      // Google button
-      document
-        .getElementById("googleBtn")
-        .addEventListener("click", async () => {
-          errorBox.classList.add("hidden");
-          try {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            await auth.signInWithRedirect(provider);
-          } catch (err) {
-            showError(err.message || "Google signup failed");
+            showError(err.message || "Signup failed");
           }
         });
     </script>

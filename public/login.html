@@ -61,21 +61,6 @@
         font-size: 0.85rem;
         font-weight: 700;
       }
-      .divider {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin: 1.25rem 0;
-        color: rgba(255, 255, 255, 0.35);
-        font-size: 0.8rem;
-      }
-      .divider::before,
-      .divider::after {
-        content: "";
-        flex: 1;
-        height: 1px;
-        background: rgba(255, 255, 255, 0.12);
-      }
       .switch {
         text-align: center;
         margin-top: 1.25rem;
@@ -92,16 +77,6 @@
         color: #fb7185;
         font-size: 0.85rem;
       }
-      .google-btn {
-        width: 100%;
-        padding: 0.85rem 1rem;
-        border-radius: 0.75rem;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        background: rgba(255, 255, 255, 0.06);
-        color: white;
-        font-weight: 700;
-        cursor: pointer;
-      }
     </style>
   </head>
   <body>
@@ -110,12 +85,6 @@
       <div class="glass glow-ring auth-card">
         <h1>Welcome back</h1>
         <p class="sub">Log in to forge quizzes</p>
-
-        <button type="button" class="google-btn" id="googleBtn">
-          Continue with Google
-        </button>
-
-        <div class="divider">or</div>
 
         <div class="error-box hidden" id="errorBox"></div>
 
@@ -136,7 +105,7 @@
               type="password"
               id="password"
               required
-              minlength="6"
+              minlength="10"
               placeholder="Your password"
             />
             <button type="button" class="toggle-pass" data-target="password">
@@ -151,16 +120,9 @@
       </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-    <script src="/js/firebase-config.js"></script>
     <script src="/js/auth.js"></script>
     <script>
-      if (Auth.getToken()) window.location.href = "/";
-
-      firebase.initializeApp(window.FIREBASE_CONFIG);
-      const auth = firebase.auth();
-      window.firebaseAuth = auth;
+      if (Auth.getToken()) window.location.replace("/");
 
       const errorBox = document.getElementById("errorBox");
       function showError(msg) {
@@ -168,84 +130,37 @@
         errorBox.classList.remove("hidden");
       }
 
-      // Reveal password
       document.querySelectorAll(".toggle-pass").forEach((btn) => {
         btn.addEventListener("click", () => {
           const input = document.getElementById(btn.dataset.target);
-          const hidden = input.type === "password";
-          input.type = hidden ? "text" : "password";
-          btn.textContent = hidden ? "Hide" : "Show";
+          const show = input.type === "password";
+          input.type = show ? "text" : "password";
+          btn.textContent = show ? "Hide" : "Show";
         });
       });
 
-      // Email/password login
       document
         .getElementById("loginForm")
         .addEventListener("submit", async (e) => {
           e.preventDefault();
           errorBox.classList.add("hidden");
+
           const email = document.getElementById("email").value.trim();
           const password = document.getElementById("password").value;
 
           try {
-            const cred = await auth.signInWithEmailAndPassword(email, password);
-            const idToken = await cred.user.getIdToken();
-            await Auth.exchangeFirebaseToken(idToken);
-            window.location.href = "/";
+            const res = await fetch("/api/auth/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email, password }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Login failed");
+
+            Auth.setAuth(data.token, data.user);
+            window.location.replace("/");
           } catch (err) {
             showError(err.message || "Login failed");
-          }
-        });
-
-      // Google login
-      document
-        .getElementById("googleBtn")
-        .addEventListener("click", async () => {
-          errorBox.classList.add("hidden");
-          try {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            const cred = await auth.signInWithPopup(provider);
-            const idToken = await cred.user.getIdToken();
-            await Auth.exchangeFirebaseToken(idToken);
-            window.location.href = "/";
-          } catch (err) {
-            showError(err.message || "Google login failed");
-          }
-        });
-      // Complete login helper
-      async function completeLogin(user) {
-        const idToken = await user.getIdToken(true);
-        await Auth.exchangeFirebaseToken(idToken);
-        window.location.replace("/");
-      }
-
-      // Handle redirect return
-      auth
-        .getRedirectResult()
-        .then((result) => {
-          if (result && result.user) completeLogin(result.user);
-        })
-        .catch((err) => {
-          if (err.code !== "auth/popup-closed-by-user") {
-            showError(err.message || "Google sign-in failed");
-          }
-        });
-
-      // Backup
-      auth.onAuthStateChanged((user) => {
-        if (user && !Auth.getToken()) completeLogin(user);
-      });
-
-      // Google button
-      document
-        .getElementById("googleBtn")
-        .addEventListener("click", async () => {
-          errorBox.classList.add("hidden");
-          try {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            await auth.signInWithRedirect(provider);
-          } catch (err) {
-            showError(err.message || "Google signup failed");
           }
         });
     </script>
