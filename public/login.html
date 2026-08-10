@@ -197,31 +197,43 @@
           }
         });
 
-      // Google login
-      // Google login/signup via redirect (more reliable)
+      // Show a temporary status while finishing Google redirect
+      async function finishRedirectLogin() {
+        try {
+          const result = await auth.getRedirectResult();
+
+          // No redirect result = normal page open
+          if (!result || !result.user) return;
+
+          // Optional: show status
+          showError("Finishing Google sign-in...");
+
+          const idToken = await result.user.getIdToken(true);
+          await Auth.exchangeFirebaseToken(idToken);
+
+          // Success
+          window.location.replace("/");
+        } catch (err) {
+          console.error("Redirect login error:", err);
+          if (err.code === "auth/popup-closed-by-user") return;
+          showError(err.message || "Google sign-in failed");
+        }
+      }
+
+      // Run this as soon as page loads
+      finishRedirectLogin();
+
+      // Google button -> redirect flow
       document
         .getElementById("googleBtn")
         .addEventListener("click", async () => {
           errorBox.classList.add("hidden");
           try {
             const provider = new firebase.auth.GoogleAuthProvider();
+            // Remember where user started (login or signup)
+            sessionStorage.setItem("qf_auth_return", window.location.pathname);
             await auth.signInWithRedirect(provider);
           } catch (err) {
-            showError(err.message || "Google login failed");
-          }
-        });
-
-      // Handle result after redirect returns
-      auth
-        .getRedirectResult()
-        .then(async (result) => {
-          if (!result || !result.user) return;
-          const idToken = await result.user.getIdToken();
-          await Auth.exchangeFirebaseToken(idToken);
-          window.location.href = "/";
-        })
-        .catch((err) => {
-          if (err.code !== "auth/popup-closed-by-user") {
             showError(err.message || "Google login failed");
           }
         });
