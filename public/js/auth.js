@@ -64,8 +64,16 @@ async function exchangeFirebaseToken(idToken) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ idToken }),
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "Auth failed");
+
+  let data = {};
+  try {
+    data = await res.json();
+  } catch (_) {}
+
+  if (!res.ok) {
+    throw new Error(data.error || "Failed to exchange Firebase token");
+  }
+
   setAuth(data.token, data.user);
   return data.user;
 }
