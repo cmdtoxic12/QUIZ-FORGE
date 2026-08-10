@@ -215,107 +215,128 @@
     <script src="/js/firebase-config.js"></script>
     <script src="/js/auth.js"></script>
     <script>
-          if (Auth.getToken()) window.location.href = "/";
+      firebase.initializeApp(window.FIREBASE_CONFIG);
+      const auth = firebase.auth();
+      window.firebaseAuth = auth;
 
-          firebase.initializeApp(window.FIREBASE_CONFIG);
-          const auth = firebase.auth();
-          window.firebaseAuth = auth;
+      const errorBox = document.getElementById("errorBox");
+      let finishing = false;
 
-          const errorBox = document.getElementById("errorBox");
-          const passwordInput = document.getElementById("password");
-          const confirmInput = document.getElementById("confirm");
-          const matchMsg = document.getElementById("matchMsg");
-          const submitBtn = document.getElementById("submitBtn");
+      function showError(msg) {
+        errorBox.textContent = msg;
+        errorBox.classList.remove("hidden");
+      }
 
-          function showError(msg) {
-            errorBox.textContent = msg;
-            errorBox.classList.remove("hidden");
+      // Already logged into QuizForge
+      if (Auth.getToken()) {
+        window.location.replace("/");
+      }
+
+      // Password show/hide (login page)
+      document.querySelectorAll(".toggle-pass").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const input = document.getElementById(btn.dataset.target);
+          if (!input) return;
+          const hidden = input.type === "password";
+          input.type = hidden ? "text" : "password";
+          btn.textContent = hidden ? "Hide" : "Show";
+        });
+      });
+
+      async function completeLogin(user, source) {
+        if (finishing) return;
+        finishing = true;
+
+        try {
+          console.log("Completing login via:", source, user.email);
+          showError("Finishing sign-in...");
+
+          const idToken = await user.getIdToken(true);
+          console.log("Got Firebase ID token");
+
+          await Auth.exchangeFirebaseToken(idToken);
+          console.log("QuizForge token saved");
+
+          window.location.replace("/");
+        } catch (err) {
+          finishing = false;
+          console.error("completeLogin failed:", err);
+          showError(err.message || "Failed to complete sign-in");
+        }
+      }
+
+      // A) Redirect result
+      auth
+        .getRedirectResult()
+        .then((result) => {
+          console.log("getRedirectResult:", result);
+          if (result && result.user) {
+            completeLogin(result.user, "redirect");
           }
-
-          // Reveal password buttons
-          document.querySelectorAll(".toggle-pass").forEach((btn) => {
-            btn.addEventListener("click", () => {
-              const input = document.getElementById(btn.dataset.target);
-              const hidden = input.type === "password";
-              input.type = hidden ? "text" : "password";
-              btn.textContent = hidden ? "Hide" : "Show";
-            });
-          });
-
-          function validatePassword() {
-            const value = passwordInput.value;
-            const confirm = confirmInput.value;
-
-            const checks = {
-              len: value.length >= 6,
-              upper: /[A-Z]/.test(value),
-              special: /[^A-Za-z0-9]/.test(value),
-            };
-
-            document.getElementById("req-len").classList.toggle("ok", checks.len);
-            document
-              .getElementById("req-upper")
-              .classList.toggle("ok", checks.upper);
-            document
-              .getElementById("req-special")
-              .classList.toggle("ok", checks.special);
-
-            const allReqs = checks.len && checks.upper && checks.special;
-            const matches = confirm.length > 0 && value === confirm;
-
-            if (!confirm) {
-              matchMsg.textContent = "Passwords must match";
-              matchMsg.className = "match-msg";
-            } else if (matches) {
-              matchMsg.textContent = "Passwords match";
-              matchMsg.className = "match-msg ok";
-            } else {
-              matchMsg.textContent = "Passwords do not match";
-              matchMsg.className = "match-msg bad";
-            }
-
-            submitBtn.disabled = !(allReqs && matches);
-            return allReqs && matches;
+        })
+        .catch((err) => {
+          console.error("getRedirectResult error:", err);
+          if (err.code !== "auth/popup-closed-by-user") {
+            showError(err.message || "Google sign-in failed");
           }
+        });
 
-          passwordInput.addEventListener("input", validatePassword);
-          confirmInput.addEventListener("input", validatePassword);
+      // B) Backup auth state
+      auth.onAuthStateChanged((user) => {
+        console.log("onAuthStateChanged:", user && user.email);
+        if (user && !Auth.getToken()) {
+          completeLogin(user, "authState");
+        }
+      });
 
-          // Email/password signup
-          document
-            .getElementById("signupForm")
-            .addEventListener("submit", async (e) => {
-              e.preventDefault();
-              errorBox.classList.add("hidden");
+      // Email/password (only if form exists)
+      const loginForm = document.getElementById("loginForm");
+      if (loginForm) {
+        loginForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          errorBox.classList.add("hidden");
+          const email = document.getElementById("email").value.trim();
+          const password = document.getElementById("password").value;
+          try {
+            const cred = await auth.signInWithEmailAndPassword(email, password);
+            await completeLogin(cred.user, "email-login");
+          } catch (err) {
+            showError(err.message || "Login failed");
+          }
+        });
+      }
 
-              if (!validatePassword()) {
-                showError("Please meet all password requirements.");
-                return;
-              }
+      const signupForm = document.getElementById("signupForm");
+      if (signupForm) {
+        signupForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          errorBox.classList.add("hidden");
+          const email = document.getElementById("email").value.trim();
+          const password = document.getElementById("password").value;
+          try {
+            const cred = await auth.createUserWithEmailAndPassword(
+              email,
+              password,
+            );
+            await completeLogin(cred.user, "email-signup");
+          } catch (err) {
+            showError(err.message || "Signup failed");
+          }
+        });
+      }
 
-              const email = document.getElementById("email").value.trim();
-              const password = passwordInput.value;
-
-              try {
-                const cred = await auth.createUserWithEmailAndPassword(
-                  email,
-                  password,
-                );
-                const idToken = await cred.user.getIdToken();
-                await Auth.exchangeFirebaseToken(idToken);
-                window.location.href = "/";
-              } catch (err) {
-                if (err.code === "auth/password-does-not-meet-requirements") {
-                  showError(
-                    "Password must include an uppercase letter and a symbol (e.g. Test123!)",
-                  );
-                } else if (err.code === "auth/email-already-in-use") {
-                  showError("That email is already registered. Try logging in.");
-                } else {
-                  showError(err.message || "Signup failed");
-                }
-              }
-            });
+      // Google redirect
+      document
+        .getElementById("googleBtn")
+        .addEventListener("click", async () => {
+          errorBox.classList.add("hidden");
+          try {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            await auth.signInWithRedirect(provider);
+          } catch (err) {
+            showError(err.message || "Google login failed");
+          }
+        });
     </script>
   </body>
 </html>
