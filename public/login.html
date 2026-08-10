@@ -156,124 +156,58 @@
     <script src="/js/firebase-config.js"></script>
     <script src="/js/auth.js"></script>
     <script>
+      if (Auth.getToken()) window.location.href = "/";
+
       firebase.initializeApp(window.FIREBASE_CONFIG);
       const auth = firebase.auth();
       window.firebaseAuth = auth;
 
       const errorBox = document.getElementById("errorBox");
-      let finishing = false;
-
       function showError(msg) {
         errorBox.textContent = msg;
         errorBox.classList.remove("hidden");
       }
 
-      // Already logged into QuizForge
-      if (Auth.getToken()) {
-        window.location.replace("/");
-      }
-
-      // Password show/hide (login page)
+      // Reveal password
       document.querySelectorAll(".toggle-pass").forEach((btn) => {
         btn.addEventListener("click", () => {
           const input = document.getElementById(btn.dataset.target);
-          if (!input) return;
           const hidden = input.type === "password";
           input.type = hidden ? "text" : "password";
           btn.textContent = hidden ? "Hide" : "Show";
         });
       });
 
-      async function completeLogin(user, source) {
-        if (finishing) return;
-        finishing = true;
-
-        try {
-          console.log("Completing login via:", source, user.email);
-          showError("Finishing sign-in...");
-
-          const idToken = await user.getIdToken(true);
-          console.log("Got Firebase ID token");
-
-          await Auth.exchangeFirebaseToken(idToken);
-          console.log("QuizForge token saved");
-
-          window.location.replace("/");
-        } catch (err) {
-          finishing = false;
-          console.error("completeLogin failed:", err);
-          showError(err.message || "Failed to complete sign-in");
-        }
-      }
-
-      // A) Redirect result
-      auth
-        .getRedirectResult()
-        .then((result) => {
-          console.log("getRedirectResult:", result);
-          if (result && result.user) {
-            completeLogin(result.user, "redirect");
-          }
-        })
-        .catch((err) => {
-          console.error("getRedirectResult error:", err);
-          if (err.code !== "auth/popup-closed-by-user") {
-            showError(err.message || "Google sign-in failed");
-          }
-        });
-
-      // B) Backup auth state
-      auth.onAuthStateChanged((user) => {
-        console.log("onAuthStateChanged:", user && user.email);
-        if (user && !Auth.getToken()) {
-          completeLogin(user, "authState");
-        }
-      });
-
-      // Email/password (only if form exists)
-      const loginForm = document.getElementById("loginForm");
-      if (loginForm) {
-        loginForm.addEventListener("submit", async (e) => {
+      // Email/password login
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", async (e) => {
           e.preventDefault();
           errorBox.classList.add("hidden");
           const email = document.getElementById("email").value.trim();
           const password = document.getElementById("password").value;
+
           try {
             const cred = await auth.signInWithEmailAndPassword(email, password);
-            await completeLogin(cred.user, "email-login");
+            const idToken = await cred.user.getIdToken();
+            await Auth.exchangeFirebaseToken(idToken);
+            window.location.href = "/";
           } catch (err) {
             showError(err.message || "Login failed");
           }
         });
-      }
 
-      const signupForm = document.getElementById("signupForm");
-      if (signupForm) {
-        signupForm.addEventListener("submit", async (e) => {
-          e.preventDefault();
-          errorBox.classList.add("hidden");
-          const email = document.getElementById("email").value.trim();
-          const password = document.getElementById("password").value;
-          try {
-            const cred = await auth.createUserWithEmailAndPassword(
-              email,
-              password,
-            );
-            await completeLogin(cred.user, "email-signup");
-          } catch (err) {
-            showError(err.message || "Signup failed");
-          }
-        });
-      }
-
-      // Google redirect
+      // Google login
       document
         .getElementById("googleBtn")
         .addEventListener("click", async () => {
           errorBox.classList.add("hidden");
           try {
             const provider = new firebase.auth.GoogleAuthProvider();
-            await auth.signInWithRedirect(provider);
+            const cred = await auth.signInWithPopup(provider);
+            const idToken = await cred.user.getIdToken();
+            await Auth.exchangeFirebaseToken(idToken);
+            window.location.href = "/";
           } catch (err) {
             showError(err.message || "Google login failed");
           }
