@@ -198,17 +198,30 @@
         });
 
       // Google login
+      // Google login/signup via redirect (more reliable)
       document
         .getElementById("googleBtn")
         .addEventListener("click", async () => {
           errorBox.classList.add("hidden");
           try {
             const provider = new firebase.auth.GoogleAuthProvider();
-            const cred = await auth.signInWithPopup(provider);
-            const idToken = await cred.user.getIdToken();
-            await Auth.exchangeFirebaseToken(idToken);
-            window.location.href = "/";
+            await auth.signInWithRedirect(provider);
           } catch (err) {
+            showError(err.message || "Google login failed");
+          }
+        });
+
+      // Handle result after redirect returns
+      auth
+        .getRedirectResult()
+        .then(async (result) => {
+          if (!result || !result.user) return;
+          const idToken = await result.user.getIdToken();
+          await Auth.exchangeFirebaseToken(idToken);
+          window.location.href = "/";
+        })
+        .catch((err) => {
+          if (err.code !== "auth/popup-closed-by-user") {
             showError(err.message || "Google login failed");
           }
         });
