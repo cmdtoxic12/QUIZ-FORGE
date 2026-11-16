@@ -1,3 +1,11 @@
+# QuizForge 2.2
+
+**Upgraded frontend** — multi-step generation progress, toast notifications, Web Audio sound effects (toggle), richer animations, improved results actions, and accessibility polish. No breaking API changes.
+
+See `CHANGELOG.md` for details.
+
+---
+
 # QuizForge 2.0
 
 QuizForge turns study material into timed quiz games. It keeps the original private, offline local-NLP generator and adds an optional LLM provider, OCR hook, authentication endpoints, a PostgreSQL adapter, and production security controls.

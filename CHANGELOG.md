@@ -1,22 +1,23 @@
 # Changelog
 
-## 2.1.0 - Gemini and source grounding
+## 2.2.0 — Professional & Interactive Upgrade
 
-- Added Gemini support using `GEMINI_API_KEY` and `gemini-3.5-flash`.
-- Added labelled source chunks, mandatory evidence quotes, and deterministic answer-evidence validation for LLM-generated questions.
-- Added versioned quiz regeneration, preserving earlier quiz links and questions.
+### Frontend
+- Multi-step generation progress UI with stage indicators and progress bar
+- Toast notification system for upload, errors, success, and share actions
+- Web Audio sound effects (correct, wrong, streak, start, complete) with persistent toggle
+- Stronger option hover, correct-pulse, and wrong-shake animations
+- Improved results action buttons and rank badge styling
+- Better empty / loading states and mobile HUD tightening
+- Focus-visible outlines for keyboard accessibility
+- File type icons and size validation feedback on upload
 
-## 2.0.0 - Production foundation
+### UX
+- Sample content loads with confirmation toast
+- Share link gives clearer success feedback
+- Score save confirms with toast + rank
+- Sound preference saved in localStorage
 
-- Added environment-based configuration and safe production validation.
-- Added registration/login endpoints using bcrypt password hashing and JWT access tokens.
-- Added optional PostgreSQL adapter and database schema; retained JSON store for local use.
-- Added LLM generation abstraction with local NLP fallback and optional OpenAI implementation.
-- Added image file acceptance, magic-byte validation, and opt-in Tesseract OCR extraction.
-- Added security controls: Helmet, rate limiting, CORS allow-list, payload limits, filename sanitization, request IDs, and structured errors.
-- Preserved existing quiz generation, play, leaderboard, and library behavior.
-- Added local-engine and security helper tests plus production deployment documentation.
-
-## Known production extensions
-
-Queued processing, object storage, malware scanning, password reset/email verification, and full account UI are deployment-integrated concerns and should be connected to the chosen cloud providers.
+### Notes
+- No breaking API changes
+- Fully backward-compatible with existing quizzes and auth

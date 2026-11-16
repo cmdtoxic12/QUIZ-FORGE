@@ -1198,3 +1198,259 @@ footer {
 .logo:hover span {
   filter: brightness(1.15);
 }
+
+/* =========================================================
+   QuizForge 2.2 — Professional & Interactive Upgrades
+   ========================================================= */
+
+/* Toast system */
+.toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  pointer-events: none;
+  max-width: min(360px, calc(100vw - 2rem));
+}
+.toast {
+  pointer-events: auto;
+  padding: 0.85rem 1.1rem;
+  border-radius: 0.85rem;
+  background: linear-gradient(160deg, rgba(30, 30, 50, 0.95), rgba(20, 20, 35, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  color: #e8ecff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  animation: toastIn 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.toast.success { border-color: rgba(163, 230, 53, 0.45); }
+.toast.error { border-color: rgba(251, 113, 133, 0.5); }
+.toast.info { border-color: rgba(34, 211, 238, 0.4); }
+.toast.leaving {
+  animation: toastOut 0.3s ease forwards;
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes toastOut {
+  to { opacity: 0; transform: translateY(10px) scale(0.95); }
+}
+
+/* Multi-step generation progress */
+.gen-progress {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.gen-progress.hidden { display: none; }
+.gen-progress-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+.gen-progress-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #7c3aed, #22d3ee);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 12px rgba(124, 92, 255, 0.5);
+}
+.gen-stages {
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+}
+.gen-stages li {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.35);
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  transition: color 0.3s;
+}
+.gen-stages li::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+.gen-stages li.active {
+  color: #e8ecff;
+  font-weight: 700;
+}
+.gen-stages li.active::before {
+  background: #22d3ee;
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.7);
+}
+.gen-stages li.done {
+  color: rgba(163, 230, 53, 0.85);
+}
+.gen-stages li.done::before {
+  background: #a3e635;
+  box-shadow: 0 0 8px rgba(163, 230, 53, 0.5);
+}
+
+/* Loading pulse */
+.loading-pulse {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto;
+  border-radius: 50%;
+  border: 3px solid rgba(124, 92, 255, 0.25);
+  border-top-color: #a78bfa;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Sound toggle */
+.sound-toggle {
+  font-size: 0.8rem !important;
+}
+.sound-toggle[aria-pressed="false"] {
+  opacity: 0.55;
+}
+
+/* Stronger option feedback */
+.opt {
+  transition: transform 0.18s ease, background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.opt:hover:not(:disabled):not(.eliminated) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(124, 92, 255, 0.25);
+}
+.opt.correct {
+  animation: correctPulse 0.55s ease;
+}
+.opt.wrong {
+  animation: wrongShake 0.45s ease;
+}
+@keyframes correctPulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.03); box-shadow: 0 0 0 4px rgba(163, 230, 53, 0.35); }
+  100% { transform: scale(1); }
+}
+@keyframes wrongShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+/* Score pop refinement */
+.score-pop {
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Results action row polish */
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+.action-row button,
+.action-row a {
+  border-radius: 999px;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e8ecff;
+  text-decoration: none;
+  cursor: pointer;
+  transition: 0.15s;
+}
+.action-row button:hover,
+.action-row a:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(167, 139, 250, 0.5);
+}
+.action-row #retryBtn {
+  background: linear-gradient(90deg, #7c3aed, #22d3ee);
+  border: none;
+  box-shadow: 0 8px 24px rgba(124, 92, 255, 0.35);
+}
+
+/* Rank badge */
+.rank-badge {
+  display: inline-block;
+  margin-top: 0.75rem;
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  background: rgba(124, 92, 255, 0.2);
+  border: 1px solid rgba(167, 139, 250, 0.4);
+}
+
+/* Focus visibility for a11y */
+.opt:focus-visible,
+.life-btn:focus-visible,
+.gen-btn:focus-visible,
+.diff-btn:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid #22d3ee;
+  outline-offset: 2px;
+}
+
+/* Mobile HUD tightening */
+@media (max-width: 560px) {
+  .hud {
+    font-size: 0.8rem;
+  }
+  .q-card .prompt {
+    font-size: 1.05rem;
+  }
+  .opt {
+    padding: 0.75rem 0.85rem;
+  }
+  .action-row {
+    flex-direction: column;
+  }
+  .action-row button,
+  .action-row a {
+    width: 100%;
+    text-align: center;
+  }
+  .toast-container {
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+  }
+}
+
+/* Subtle card entrance */
+.quiz-card,
+.card {
+  animation: fadeUp 0.45s ease both;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Dropzone active feedback */
+.dropzone.drag {
+  transform: scale(1.01);
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.35);
+}

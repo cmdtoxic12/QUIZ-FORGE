@@ -167,8 +167,26 @@
           <p class="gen-note">
             Questions are built only from what your files actually say.
           </p>
+
+          <!-- Multi-step generation progress -->
+          <div class="gen-progress hidden" id="genProgress" aria-live="polite">
+            <div class="gen-progress-bar">
+              <div class="gen-progress-fill" id="genProgressFill"></div>
+            </div>
+            <ul class="gen-stages" id="genStages">
+              <li data-stage="0">Reading your documents</li>
+              <li data-stage="1">Extracting key concepts</li>
+              <li data-stage="2">Ranking the juiciest facts</li>
+              <li data-stage="3">Writing tricky distractors</li>
+              <li data-stage="4">Balancing difficulty curve</li>
+              <li data-stage="5">Loading the arcade</li>
+            </ul>
+          </div>
         </div>
       </section>
+
+      <!-- Toast notifications -->
+      <div id="toastContainer" class="toast-container" aria-live="polite"></div>
 
       <section class="section" id="how">
         <h2>What the agent actually does</h2>

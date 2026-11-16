@@ -1,6 +1,6 @@
 {
   "name": "quiz-forge",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Turn documents into timed arcade quiz games — HTML/CSS/JS frontend + Express backend",
   "main": "server/index.js",
   "scripts": {

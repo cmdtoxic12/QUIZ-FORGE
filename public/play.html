@@ -4,11 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Play · QuizForge</title>
-  <link
-      rel="icon"
-      type="image/png"
-      href="logo.png"
-    />
+  <link rel="icon" type="image/png" href="logo.png" />
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body>
@@ -16,10 +12,13 @@
   <div class="wrap">
     <nav>
       <a class="logo" href="/" aria-label="QuizForge home">
-          <img src="logo.png" alt="QuizForge logo" />
-          <span>QuizForge</span>
+        <img src="logo.png" alt="QuizForge logo" />
+        <span>QuizForge</span>
       </a>
       <div class="nav-links">
+        <button type="button" class="btn btn-ghost sound-toggle" id="soundToggle" aria-pressed="true" title="Toggle sound effects">
+          🔊 Sound
+        </button>
         <a href="/library">Library</a>
         <a href="/">New quiz</a>
       </div>
@@ -27,10 +26,12 @@
 
     <div class="game-wrap" id="app">
       <div class="glass glow-ring intro-card" id="loading">
-        <p style="color:rgba(255,255,255,0.6)">Loading quiz…</p>
+        <div class="loading-pulse" aria-hidden="true"></div>
+        <p style="color:rgba(255,255,255,0.6);margin-top:1rem">Loading quiz…</p>
       </div>
     </div>
   </div>
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
   <script src="/js/play.js"></script>
 </body>
 </html>

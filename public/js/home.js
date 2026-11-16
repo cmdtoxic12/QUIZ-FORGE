@@ -9,6 +9,7 @@
   // Load My Quizzes
   loadMyQuizzes();
 })();
+
 const SAMPLE = `Photosynthesis is the process by which green plants convert light energy into chemical energy stored in glucose. The reaction takes place inside chloroplasts, organelles that contain the green pigment chlorophyll.
 Chlorophyll absorbs light most strongly in the blue and red parts of the spectrum, which is why leaves appear green to the human eye.
 The light-dependent reactions occur in the thylakoid membranes and split water molecules, releasing oxygen as a by-product. Roughly 330 billion tonnes of oxygen are produced by photosynthesis every year.
@@ -41,6 +42,23 @@ const countVal = document.getElementById("countVal");
 const genBtn = document.getElementById("genBtn");
 const errorBox = document.getElementById("errorBox");
 const sampleBtn = document.getElementById("sampleBtn");
+const genProgress = document.getElementById("genProgress");
+const genProgressFill = document.getElementById("genProgressFill");
+const genStages = document.getElementById("genStages");
+
+/* ---------- Toast helper ---------- */
+function toast(message, type = "info", duration = 3200) {
+  const container = document.getElementById("toastContainer");
+  if (!container) return;
+  const el = document.createElement("div");
+  el.className = `toast ${type}`;
+  el.textContent = message;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.classList.add("leaving");
+    setTimeout(() => el.remove(), 300);
+  }, duration);
+}
 
 function formatSize(bytes) {
   if (bytes < 1024) return `${bytes} B`;
@@ -53,12 +71,12 @@ function renderFiles() {
     .map(
       (f, i) => `
     <li class="file-item">
-      <span>${f.name.endsWith(".pdf") ? "📕" : "📘"}</span>
+      <span>${f.name.toLowerCase().endsWith(".pdf") ? "📕" : f.name.match(/\.(png|jpe?g|webp)$/i) ? "🖼️" : "📘"}</span>
       <div class="meta">
         <div class="name">${escapeHtml(f.name)}</div>
         <div class="size">${formatSize(f.size)}</div>
       </div>
-      <button type="button" data-i="${i}" aria-label="Remove">✕</button>
+      <button type="button" data-i="${i}" aria-label="Remove ${escapeHtml(f.name)}">✕</button>
     </li>`,
     )
     .join("");
@@ -67,12 +85,13 @@ function renderFiles() {
       e.stopPropagation();
       files.splice(Number(btn.dataset.i), 1);
       renderFiles();
+      toast("File removed", "info", 1800);
     });
   });
 }
 
 function escapeHtml(s) {
-  return s.replace(
+  return String(s).replace(
     /[&<>"']/g,
     (c) =>
       ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
@@ -82,13 +101,39 @@ function escapeHtml(s) {
 }
 
 function addFiles(list) {
+  let added = 0;
   for (const f of list) {
-    if (files.length >= 5) break;
-    if (!files.some((x) => x.name === f.name && x.size === f.size))
+    if (files.length >= 5) {
+      toast("Maximum 5 files allowed", "error");
+      break;
+    }
+    if (f.size > 12 * 1024 * 1024) {
+      toast(`${f.name} is larger than 12 MB`, "error");
+      continue;
+    }
+    if (!files.some((x) => x.name === f.name && x.size === f.size)) {
       files.push(f);
+      added++;
+    }
   }
   renderFiles();
   errorBox.classList.add("hidden");
+  if (added) toast(`${added} file${added > 1 ? "s" : ""} added`, "success", 2000);
+}
+
+function setProgressStage(idx) {
+  stageIdx = idx;
+  const pct = ((idx + 1) / STAGES.length) * 100;
+  if (genProgressFill) genProgressFill.style.width = `${pct}%`;
+  if (genStages) {
+    genStages.querySelectorAll("li").forEach((li) => {
+      const s = Number(li.dataset.stage);
+      li.classList.remove("active", "done");
+      if (s < idx) li.classList.add("done");
+      else if (s === idx) li.classList.add("active");
+    });
+  }
+  genBtn.innerHTML = `<span class="spinner"></span>${STAGES[idx]}`;
 }
 
 dropzone.addEventListener("click", () => fileInput.click());
@@ -125,6 +170,7 @@ sampleBtn.addEventListener("click", () => {
   pasteArea.classList.remove("hidden");
   pasteToggle.textContent = "− Hide text box";
   errorBox.classList.add("hidden");
+  toast("Sample photosynthesis notes loaded", "success");
 });
 
 countInput.addEventListener("input", () => {
@@ -148,18 +194,22 @@ genBtn.addEventListener("click", async () => {
     errorBox.textContent =
       "Add a document, or paste at least a couple of paragraphs of text.";
     errorBox.classList.remove("hidden");
+    toast("Need more content to forge a quiz", "error");
     return;
   }
 
   loading = true;
   stageIdx = 0;
   genBtn.disabled = true;
-  genBtn.innerHTML = `<span class="spinner"></span>${STAGES[0]}`;
+  if (genProgress) genProgress.classList.remove("hidden");
+  setProgressStage(0);
   errorBox.classList.add("hidden");
+
   stageTimer = setInterval(() => {
-    stageIdx = Math.min(stageIdx + 1, STAGES.length - 1);
-    genBtn.innerHTML = `<span class="spinner"></span>${STAGES[stageIdx]}`;
-  }, 1100);
+    if (stageIdx < STAGES.length - 1) {
+      setProgressStage(stageIdx + 1);
+    }
+  }, 1200);
 
   try {
     const body = new FormData();
@@ -176,13 +226,22 @@ genBtn.addEventListener("click", async () => {
     const data = await res.json();
     if (!res.ok || !data.code)
       throw new Error(data.error || "Generation failed.");
-    window.location.href = `/play/${data.code}`;
+
+    setProgressStage(STAGES.length - 1);
+    clearInterval(stageTimer);
+    toast("Quiz forged! Launching…", "success", 1500);
+    setTimeout(() => {
+      window.location.href = `/play/${data.code}`;
+    }, 600);
   } catch (err) {
     errorBox.textContent = err.message || "Generation failed.";
     errorBox.classList.remove("hidden");
+    toast(err.message || "Generation failed", "error");
     loading = false;
     genBtn.disabled = false;
     genBtn.textContent = "🎮 Generate my quiz game";
+    if (genProgress) genProgress.classList.add("hidden");
+    if (genProgressFill) genProgressFill.style.width = "0%";
     clearInterval(stageTimer);
   }
 });

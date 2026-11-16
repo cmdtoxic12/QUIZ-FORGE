@@ -6,6 +6,88 @@ const TYPE_LABEL = {
   "which-true": "Spot the truth",
 };
 
+/* ---------- Sound + Toast (QuizForge 2.2) ---------- */
+let soundEnabled = localStorage.getItem("qf-sound") !== "0";
+let audioCtx = null;
+
+function getAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) {}
+  }
+  return audioCtx;
+}
+
+function playTone(freq, duration = 0.12, type = "sine", volume = 0.08) {
+  if (!soundEnabled) return;
+  const ctx = getAudio();
+  if (!ctx) return;
+  try {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.value = volume;
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + duration);
+  } catch (_) {}
+}
+
+function sfxCorrect() {
+  playTone(523, 0.08, "sine", 0.07);
+  setTimeout(() => playTone(784, 0.12, "sine", 0.07), 80);
+}
+function sfxWrong() {
+  playTone(200, 0.18, "triangle", 0.06);
+}
+function sfxStreak() {
+  playTone(660, 0.06); setTimeout(() => playTone(880, 0.08), 70);
+}
+function sfxTick() {
+  playTone(440, 0.03, "square", 0.03);
+}
+function sfxStart() {
+  playTone(392, 0.1); setTimeout(() => playTone(523, 0.12), 100);
+}
+function sfxComplete() {
+  [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => playTone(f, 0.15, "sine", 0.06), i * 90));
+}
+
+function toast(message, type = "info", duration = 2800) {
+  const container = document.getElementById("toastContainer");
+  if (!container) return;
+  const el = document.createElement("div");
+  el.className = `toast ${type}`;
+  el.textContent = message;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.classList.add("leaving");
+    setTimeout(() => el.remove(), 280);
+  }, duration);
+}
+
+function initSoundToggle() {
+  const btn = document.getElementById("soundToggle");
+  if (!btn) return;
+  const sync = () => {
+    btn.setAttribute("aria-pressed", soundEnabled ? "true" : "false");
+    btn.textContent = soundEnabled ? "🔊 Sound" : "🔇 Sound";
+  };
+  sync();
+  btn.addEventListener("click", () => {
+    soundEnabled = !soundEnabled;
+    localStorage.setItem("qf-sound", soundEnabled ? "1" : "0");
+    sync();
+    if (soundEnabled) sfxTick();
+    toast(soundEnabled ? "Sound on" : "Sound muted", "info", 1600);
+  });
+}
+initSoundToggle();
+
+
+
 function engineLabel(engine) {
   if (engine?.startsWith("gemini:")) {
     return { text: "Gemini AI • Source-grounded", className: "gemini" };
@@ -138,6 +220,7 @@ function start() {
   startedAt = Date.now();
   phase = "playing";
   index = 0;
+  sfxStart();
   beginQuestion(0);
   render();
 }
@@ -167,6 +250,12 @@ function submitAnswer(optionId) {
     msUsed,
   });
 
+  if (correct) {
+    if (streak > 1) sfxStreak();
+    else sfxCorrect();
+  } else {
+    sfxWrong();
+  }
   showPop(
     correct
       ? `+${gained}${bonus ? ` 🔥x${streak}` : ""}`
@@ -184,6 +273,7 @@ function next() {
     const accuracy =
       answers.filter((a) => a.correct).length / Math.max(answers.length, 1);
     if (accuracy >= 0.7) confetti();
+    sfxComplete();
     render();
     return;
   }
@@ -412,8 +502,13 @@ function render() {
       try {
         await navigator.clipboard.writeText(window.location.href);
         document.getElementById("shareBtn").textContent = "Copied!";
+        toast("Quiz link copied to clipboard", "success");
+        setTimeout(() => {
+          const b = document.getElementById("shareBtn");
+          if (b) b.textContent = "Copy link";
+        }, 2000);
       } catch {
-        /* ignore */
+        toast("Could not copy link", "error");
       }
     };
     document.getElementById("regenerateBtn").onclick = async () => {
@@ -459,6 +554,7 @@ async function saveScore() {
     const data = await res.json();
     const msg = document.getElementById("saveMsg");
     msg.textContent = data.rank ? `Saved! Rank #${data.rank}` : "Saved!";
+    toast(data.rank ? `Saved — Rank #${data.rank}` : "Score saved!", "success");
     renderLeaderboard(data.leaderboard || []);
   } catch {
     btn.disabled = false;
