@@ -1,8 +1,8 @@
-# QuizForge 2.2
+# QuizForge 2.3
 
-**Upgraded frontend** — multi-step generation progress, toast notifications, Web Audio sound effects (toggle), richer animations, improved results actions, and accessibility polish. No breaking API changes.
+Professional frontend upgrade: multi-step generation progress, toasts, sound effects, **light/dark theme**, **library search & filters**, and **PWA install support**.
 
-See `CHANGELOG.md` for details.
+See `CHANGELOG.md` for the full list. No breaking API changes.
 
 ---
 

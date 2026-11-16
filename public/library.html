@@ -4,11 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Library · QuizForge</title>
-  <link
-      rel="icon"
-      type="image/png"
-      href="logo.png"
-    />
+  <link rel="icon" type="image/png" href="logo.png" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#060713" />
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body>
@@ -16,10 +14,11 @@
   <div class="wrap">
     <nav>
       <a class="logo" href="/" aria-label="QuizForge home">
-          <img src="logo.png" alt="QuizForge logo" />
-          <span>QuizForge</span>
+        <img src="logo.png" alt="QuizForge logo" />
+        <span>QuizForge</span>
       </a>
       <div class="nav-links">
+        <button type="button" class="btn btn-ghost theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
         <a href="/library">Library</a>
         <a href="/">New quiz</a>
       </div>
@@ -27,13 +26,43 @@
 
     <section class="section" style="margin-top:1rem">
       <h2>Quiz library</h2>
-      <p class="sub">All quizzes forged on this server.</p>
-      <div class="recent-grid" id="libGrid" style="margin-top:1.5rem"></div>
+      <p class="sub">Browse, search and filter quizzes forged on this server.</p>
+
+      <div class="lib-toolbar glass">
+        <input
+          type="search"
+          id="libSearch"
+          class="lib-search"
+          placeholder="Search by title…"
+          aria-label="Search quizzes"
+        />
+        <div class="lib-filters" role="group" aria-label="Difficulty filter">
+          <button type="button" class="filter-chip active" data-diff="all">All</button>
+          <button type="button" class="filter-chip" data-diff="easy">🍃 Warm-up</button>
+          <button type="button" class="filter-chip" data-diff="mixed">🎯 Balanced</button>
+          <button type="button" class="filter-chip" data-diff="hard">🔥 Brutal</button>
+        </div>
+        <div class="lib-sort">
+          <label for="libSort">Sort</label>
+          <select id="libSort">
+            <option value="newest">Newest</option>
+            <option value="plays">Most played</option>
+            <option value="title">Title A–Z</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="lib-count" id="libCount"></p>
+      <div class="recent-grid" id="libGrid" style="margin-top:1rem"></div>
       <p id="empty" class="hidden" style="margin-top:2rem;color:rgba(255,255,255,0.5);text-align:center">
-        No quizzes yet. <a href="/" style="color:#67e8f9">Forge one →</a>
+        No quizzes match. <a href="/" style="color:#67e8f9">Forge one →</a>
       </p>
     </section>
+
+    <footer>QuizForge · local NLP · HTML + Express · v2.3</footer>
   </div>
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+  <script src="/js/theme.js"></script>
   <script src="/js/library.js"></script>
 </body>
 </html>

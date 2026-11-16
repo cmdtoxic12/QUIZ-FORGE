@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Login · QuizForge</title>
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#060713" />
     <link rel="stylesheet" href="/css/styles.css" />
     <style>
       .auth-wrap {
@@ -120,7 +122,13 @@
       </div>
     </div>
 
-    <script src="/js/auth.js"></script>
+      <script src="/js/theme.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    }
+  </script>
+  <script src="/js/auth.js"></script>
     <script>
       if (Auth.getToken()) window.location.replace("/");
 

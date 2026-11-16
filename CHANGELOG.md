@@ -1,23 +1,20 @@
 # Changelog
 
-## 2.2.0 — Professional & Interactive Upgrade
+## 2.3.0 — Theme, Library & PWA
 
-### Frontend
-- Multi-step generation progress UI with stage indicators and progress bar
-- Toast notification system for upload, errors, success, and share actions
-- Web Audio sound effects (correct, wrong, streak, start, complete) with persistent toggle
-- Stronger option hover, correct-pulse, and wrong-shake animations
-- Improved results action buttons and rank badge styling
-- Better empty / loading states and mobile HUD tightening
-- Focus-visible outlines for keyboard accessibility
-- File type icons and size validation feedback on upload
+### New
+- **Light / dark theme toggle** with system preference detection and localStorage persistence
+- **Library search, difficulty filters, and sort** (newest / most played / title)
+- **PWA support**: web app manifest + service worker for installable offline shell
+- Theme toggle available on home, play, library, login, and signup
 
-### UX
-- Sample content loads with confirmation toast
-- Share link gives clearer success feedback
-- Score save confirms with toast + rank
-- Sound preference saved in localStorage
+### From 2.2.0
+- Multi-step generation progress UI
+- Toast notifications
+- Web Audio sound effects with mute toggle
+- Richer option animations and mobile polish
+- Focus-visible accessibility improvements
 
-### Notes
+### Compatibility
 - No breaking API changes
-- Fully backward-compatible with existing quizzes and auth
+- Existing quizzes and auth continue to work

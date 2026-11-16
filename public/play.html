@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Play · QuizForge</title>
   <link rel="icon" type="image/png" href="logo.png" />
-  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#060713" />
+    <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body>
   <div class="aurora"></div>
@@ -16,6 +18,7 @@
         <span>QuizForge</span>
       </a>
       <div class="nav-links">
+        <button type="button" class="btn btn-ghost theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
         <button type="button" class="btn btn-ghost sound-toggle" id="soundToggle" aria-pressed="true" title="Toggle sound effects">
           🔊 Sound
         </button>
@@ -32,6 +35,12 @@
     </div>
   </div>
   <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+    <script src="/js/theme.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    }
+  </script>
   <script src="/js/play.js"></script>
 </body>
 </html>

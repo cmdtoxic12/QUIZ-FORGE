@@ -1454,3 +1454,204 @@ footer {
   transform: scale(1.01);
   box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.35);
 }
+
+/* =========================================================
+   QuizForge 2.3 — Theme, Library, PWA polish
+   ========================================================= */
+
+/* Light theme */
+[data-theme="light"] {
+  --bg: #f4f6fb;
+  --ink: #1a1d2e;
+}
+[data-theme="light"] body {
+  background-color: var(--bg);
+  color: var(--ink);
+}
+[data-theme="light"] .aurora {
+  background:
+    radial-gradient(60rem 40rem at 12% -10%, rgba(124, 92, 255, 0.18), transparent 60%),
+    radial-gradient(50rem 35rem at 92% 8%, rgba(34, 211, 238, 0.12), transparent 60%),
+    radial-gradient(45rem 40rem at 50% 110%, rgba(251, 113, 133, 0.1), transparent 60%),
+    var(--bg);
+}
+[data-theme="light"] .aurora::after {
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+}
+[data-theme="light"] .glass {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.65));
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: var(--ink);
+}
+[data-theme="light"] .lead,
+[data-theme="light"] .sub,
+[data-theme="light"] .step p,
+[data-theme="light"] .card p,
+[data-theme="light"] .quiz-card .meta,
+[data-theme="light"] .gen-note {
+  color: rgba(26, 29, 46, 0.65);
+}
+[data-theme="light"] .nav-links a {
+  color: rgba(26, 29, 46, 0.7);
+}
+[data-theme="light"] .nav-links a:hover {
+  color: #1a1d2e;
+  background: rgba(0, 0, 0, 0.05);
+}
+[data-theme="light"] .dropzone {
+  border-color: rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.5);
+}
+[data-theme="light"] textarea,
+[data-theme="light"] .auth-card input,
+[data-theme="light"] .lib-search,
+[data-theme="light"] select {
+  background: rgba(255, 255, 255, 0.9);
+  color: #1a1d2e;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+[data-theme="light"] .diff-btn {
+  background: rgba(0, 0, 0, 0.04);
+  color: rgba(26, 29, 46, 0.7);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+[data-theme="light"] .diff-btn.active {
+  color: #1a1d2e;
+}
+[data-theme="light"] .badge {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: rgba(26, 29, 46, 0.7);
+}
+[data-theme="light"] footer {
+  color: rgba(26, 29, 46, 0.45);
+}
+[data-theme="light"] .toast {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.98), rgba(245, 247, 255, 0.98));
+  color: #1a1d2e;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+[data-theme="light"] .file-item {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+[data-theme="light"] .opt {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #1a1d2e;
+}
+[data-theme="light"] .q-card .prompt,
+[data-theme="light"] .intro-card h1,
+[data-theme="light"] .results-card h1 {
+  color: #1a1d2e;
+}
+[data-theme="light"] .hud {
+  color: rgba(26, 29, 46, 0.85);
+}
+
+/* Library toolbar */
+.lib-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 1rem;
+  margin-top: 1.25rem;
+  border-radius: 1rem;
+}
+.lib-search {
+  flex: 1 1 180px;
+  min-width: 140px;
+  padding: 0.65rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.3);
+  color: inherit;
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+}
+.lib-search:focus {
+  border-color: rgba(167, 139, 250, 0.7);
+  box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.2);
+}
+.lib-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.filter-chip {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.65);
+  padding: 0.4rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: 0.15s;
+}
+.filter-chip:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.filter-chip.active {
+  border-color: #a78bfa;
+  background: rgba(124, 92, 255, 0.25);
+  color: #fff;
+}
+[data-theme="light"] .filter-chip {
+  background: rgba(0, 0, 0, 0.04);
+  color: rgba(26, 29, 46, 0.7);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+[data-theme="light"] .filter-chip.active {
+  color: #1a1d2e;
+  background: rgba(124, 92, 255, 0.15);
+}
+.lib-sort {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+}
+[data-theme="light"] .lib-sort {
+  color: rgba(26, 29, 46, 0.55);
+}
+.lib-sort select {
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.3);
+  color: inherit;
+  font-family: inherit;
+  font-size: 0.8rem;
+}
+.lib-count {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 600;
+}
+[data-theme="light"] .lib-count {
+  color: rgba(26, 29, 46, 0.5);
+}
+
+.theme-toggle {
+  font-size: 1rem !important;
+  line-height: 1;
+  min-width: 2.2rem;
+  padding: 0.35rem 0.55rem !important;
+}
+
+footer {
+  margin-top: 3.5rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.35);
+  padding-bottom: 1rem;
+}
