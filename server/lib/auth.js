@@ -7,11 +7,15 @@ function validateCredentials({ email, password }) {
   const normalizedEmail = String(email || "")
     .trim()
     .toLowerCase();
-  if (!/^\S+@\S+\.\S+$/.test(normalizedEmail)) {
+  if (normalizedEmail.length > 254 || !/^\S+@\S+\.\S+$/.test(normalizedEmail)) {
     throw apiError(400, "Enter a valid email address.");
   }
-  if (typeof password !== "string" || password.length < 10) {
-    throw apiError(400, "Password must be at least 10 characters.");
+  if (
+    typeof password !== "string" ||
+    password.length < 10 ||
+    Buffer.byteLength(password, "utf8") > 72
+  ) {
+    throw apiError(400, "Password must be at least 10 characters and no more than 72 UTF-8 bytes.");
   }
   return { email: normalizedEmail, password };
 }

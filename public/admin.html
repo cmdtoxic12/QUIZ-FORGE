@@ -350,6 +350,7 @@
 
     <script>
       const TOKEN_KEY = "qf_admin_token";
+      localStorage.removeItem(TOKEN_KEY);
       const loginView = document.getElementById("loginView");
       const dashboard = document.getElementById("dashboard");
       const passwordInput = document.getElementById("password");
@@ -358,13 +359,13 @@
       const logoutBtn = document.getElementById("logoutBtn");
 
       function getToken() {
-        return localStorage.getItem(TOKEN_KEY);
+        return sessionStorage.getItem(TOKEN_KEY);
       }
       function setToken(t) {
-        localStorage.setItem(TOKEN_KEY, t);
+        sessionStorage.setItem(TOKEN_KEY, t);
       }
       function clearToken() {
-        localStorage.removeItem(TOKEN_KEY);
+        sessionStorage.removeItem(TOKEN_KEY);
       }
 
       function escapeHtml(s) {
@@ -486,7 +487,7 @@
               (q) => `
         <tr>
           <td>${escapeHtml(q.title)}</td>
-          <td><a class="code-link" href="/play/${q.code}" target="_blank">${q.code}</a></td>
+          <td><a class="code-link" href="/play/${q.code}" target="_blank" rel="noopener noreferrer">${q.code}</a></td>
           <td>${q.plays || 0}</td>
           <td>${q.questionCount || "—"}</td>
           <td><span class="badge">${q.difficulty || "mixed"}</span></td>
@@ -505,7 +506,7 @@
         <tr>
           <td>${i + 1}</td>
           <td>${escapeHtml(q.title)}</td>
-          <td><a class="code-link" href="/play/${q.code}" target="_blank">${q.code}</a></td>
+          <td><a class="code-link" href="/play/${q.code}" target="_blank" rel="noopener noreferrer">${q.code}</a></td>
           <td><strong>${q.plays || 0}</strong></td>
           <td>${q.questionCount || "—"}</td>
         </tr>
@@ -525,7 +526,7 @@
           <td><strong>${(a.score || 0).toLocaleString()}</strong></td>
           <td>${a.correct || 0}/${a.total || 0}</td>
           <td>🔥 ${a.maxStreak || 0}</td>
-          <td><a class="code-link" href="/play/${a.quizCode}" target="_blank">${escapeHtml(a.quizTitle || a.quizCode)}</a></td>
+          <td><a class="code-link" href="/play/${a.quizCode}" target="_blank" rel="noopener noreferrer">${escapeHtml(a.quizTitle || a.quizCode)}</a></td>
         </tr>
       `,
             )
@@ -541,7 +542,7 @@
           <td>${escapeHtml(a.playerName || "Anonymous")}</td>
           <td>${(a.score || 0).toLocaleString()}</td>
           <td>${a.correct || 0}/${a.total || 0}</td>
-          <td><a class="code-link" href="/play/${a.quizCode}" target="_blank">${escapeHtml(a.quizTitle || a.quizCode)}</a></td>
+          <td><a class="code-link" href="/play/${a.quizCode}" target="_blank" rel="noopener noreferrer">${escapeHtml(a.quizTitle || a.quizCode)}</a></td>
           <td>${timeAgo(a.at)}</td>
         </tr>
       `,

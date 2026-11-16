@@ -1,4 +1,4 @@
-# QuizForge 2.0
+# QuizForge 2.1.0
 
 QuizForge turns study material into timed quiz games. It keeps the original private, offline local-NLP generator and adds an optional LLM provider, OCR hook, authentication endpoints, a PostgreSQL adapter, and production security controls.
 
@@ -20,7 +20,7 @@ Set these values in `.env` before deploying:
 | --- | --- |
 | `NODE_ENV=production` | Enables production safeguards. |
 | `JWT_SECRET` | A unique random secret of at least 32 characters. |
-| `CORS_ORIGIN` | Comma-separated allowed web origins. |
+| `CORS_ORIGIN` | Comma-separated allowed web origins when the frontend is hosted separately; same-origin requests work when left blank. |
 | `STORE_DRIVER=postgres` + `DATABASE_URL` | Enables PostgreSQL persistence. |
 | `QUIZ_ENGINE=gemini` + `GEMINI_API_KEY` | Enables Gemini 3.5 Flash source-grounded generation. |
 | `QUIZ_ENGINE=openai` + `OPENAI_API_KEY` | Enables OpenAI source-grounded generation. |
@@ -37,7 +37,7 @@ For PostgreSQL, enable the `pgcrypto` extension once, then run [`db/schema.sql`]
 - Deterministic source-grounding validation: every AI answer must occur in its exact supporting excerpt
 - Answer explanations and hints preserved in every generated question
 - Registration and sign-in API using bcrypt password hashes and expiring JWTs
-- PostgreSQL repository adapter plus development JSON store
+- PostgreSQL repository adapter plus development JSON store (production requires PostgreSQL)
 - Rate limiting, Helmet security headers, upload magic-byte validation, constrained CORS, payload limits, and request IDs
 - Timed quiz play, lifelines, leaderboard, shareable links, and library
 - Node test suite for local generation and security helpers
@@ -54,9 +54,9 @@ For PostgreSQL, enable the `pgcrypto` extension once, then run [`db/schema.sql`]
 | `GET` | `/api/quiz/:code` | Fetch a quiz |
 | `GET/POST` | `/api/quiz/:code/attempt` | Leaderboard and score submission |
 
-Pass `Authorization: Bearer <token>` to associate new quizzes with an authenticated user. The current UI remains anonymous-compatible to preserve the original flow.
+Pass `Authorization: Bearer <token>` to associate new quizzes with an authenticated user. The landing page, public quiz play, and library are available to guests; generating quizzes and viewing a personal quiz list require an account.
 
-New quizzes retain a source snapshot so **Generate new version** can create a versioned question set without replacing the original quiz. Source snapshots are not returned by the public API; use encrypted database storage and define a retention policy before production deployment.
+New quizzes retain a source snapshot so **Generate new version** can create a versioned question set without replacing the original quiz. Public quiz responses omit source filenames and verbatim evidence excerpts. Source snapshots remain stored server-side; use encrypted database storage and define a retention policy before production deployment.
 
 ## Scripts
 

@@ -27,9 +27,21 @@
 
     <section class="section" style="margin-top:1rem">
       <h2>Quiz library</h2>
-      <p class="sub">All quizzes forged on this server.</p>
-      <div class="recent-grid" id="libGrid" style="margin-top:1.5rem"></div>
-      <p id="empty" class="hidden" style="margin-top:2rem;color:rgba(255,255,255,0.5);text-align:center">
+      <p class="sub">Explore recent quizzes and find a topic to practice.</p>
+      <div class="library-controls">
+        <label class="sr-only" for="librarySearch">Search quizzes</label>
+        <input id="librarySearch" type="search" placeholder="Search titles or topics…" autocomplete="off" />
+        <label class="sr-only" for="difficultyFilter">Filter by difficulty</label>
+        <select id="difficultyFilter">
+          <option value="all">All difficulties</option>
+          <option value="easy">Warm-up</option>
+          <option value="mixed">Balanced</option>
+          <option value="hard">Advanced</option>
+        </select>
+      </div>
+      <p id="libraryStatus" class="library-status" role="status" aria-live="polite">Loading quizzes…</p>
+      <div class="recent-grid" id="libGrid"></div>
+      <p id="empty" class="hidden library-status">
         No quizzes yet. <a href="/" style="color:#67e8f9">Forge one →</a>
       </p>
     </section>

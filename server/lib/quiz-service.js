@@ -124,7 +124,9 @@ function isAnswerSupported(answer, evidence) {
   if (words.length === 0) return true;
 
   const matched = words.filter((w) => cleanE.includes(w));
-  return matched.length / words.length >= 0.5;
+  // A half-token match can validate a materially different answer such as
+  // "infrared light" against evidence that only mentions "blue and red light".
+  return matched.length / words.length >= 0.75;
 }
 
 function validateGroundedQuestions(questions, sources) {

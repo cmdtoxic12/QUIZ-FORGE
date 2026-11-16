@@ -5,6 +5,7 @@ const TYPE_LABEL = {
   "fill-blank": "Fill the blank",
   "which-true": "Spot the truth",
 };
+const DIFFICULTY_LABEL = { easy: "Warm-up", medium: "Balanced", mixed: "Balanced", hard: "Advanced" };
 
 function engineLabel(engine) {
   if (engine?.startsWith("gemini:")) {
@@ -15,7 +16,7 @@ function engineLabel(engine) {
     return { text: "OpenAI AI • Source-grounded", className: "openai" };
   }
 
-  return { text: "Local quiz engine • Offline", className: "local" };
+  return { text: "Local quiz engine", className: "local" };
 }
 
 function rankFor(accuracy) {
@@ -81,6 +82,7 @@ function confetti() {
 
 const code = window.location.pathname.split("/").pop()?.toUpperCase();
 const app = document.getElementById("app");
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 let quiz = null;
 let questions = [];
@@ -239,6 +241,8 @@ function showPop(text, good) {
   const el = document.createElement("div");
   el.className = `score-pop ${good ? "good" : "bad"}`;
   el.textContent = text;
+  el.setAttribute("role", "status");
+  el.setAttribute("aria-live", "polite");
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 1100);
 }
@@ -307,16 +311,16 @@ function render() {
           ${streak > 1 ? `<span style="color:var(--lime)">🔥 ${streak}</span>` : ""}
         </div>
         <div class="hud-right">
-          <span id="timeLabel">${Math.ceil(timeLeft / 1000)}s</span>
+          <span id="timeLabel" role="timer" aria-label="Time remaining">${Math.ceil(timeLeft / 1000)}s</span>
         </div>
       </div>
-      <div class="progress-bar"><div style="width:${pct}%"></div></div>
-      <div class="timer-bar ${timerPct < 40 ? (timerPct < 20 ? "danger" : "warn") : ""}" id="timerBar">
+      <div class="progress-bar" role="progressbar" aria-label="Quiz progress" aria-valuemin="0" aria-valuemax="${questions.length}" aria-valuenow="${index + (phase === "reveal" ? 1 : 0)}"><div style="width:${pct}%"></div></div>
+      <div class="timer-bar ${timerPct < 40 ? (timerPct < 20 ? "danger" : "warn") : ""}" id="timerBar" aria-hidden="true">
         <div id="timerFill" style="width:${timerPct}%"></div>
       </div>
       <div class="glass glow-ring q-card" style="text-align:left">
-        <span class="type-badge ${q.difficulty}">${TYPE_LABEL[q.type] || q.type} · ${q.difficulty}</span>
-        <div class="prompt">${renderPrompt(q.prompt)}</div>
+        <span class="type-badge ${q.difficulty}">${TYPE_LABEL[q.type] || q.type} · ${DIFFICULTY_LABEL[q.difficulty] || q.difficulty}</span>
+        <div class="prompt" id="questionPrompt" tabindex="-1">${renderPrompt(q.prompt)}</div>
         <div class="options">
           ${q.options
             .map((o, i) => {
@@ -327,7 +331,14 @@ function render() {
                 else if (o.id === chosen) cls += " wrong";
                 else cls += " disabled";
               }
-              return `<button type="button" class="${cls}" data-id="${o.id}" ${
+              const answerState = phase === "reveal"
+                ? o.id === q.correctOptionId
+                  ? " Correct answer"
+                  : o.id === chosen
+                    ? " Your answer, incorrect"
+                    : ""
+                : "";
+              return `<button type="button" class="${cls}" data-id="${o.id}" aria-label="${LETTERS[i]}. ${escapeHtml(o.text)}${answerState}" ${
                 phase !== "playing" || eliminated.includes(o.id)
                   ? "disabled"
                   : ""
@@ -346,7 +357,8 @@ function render() {
                 <button type="button" class="life-btn" id="skipBtn" ${lifelines.skip ? "" : "disabled"}>Skip (${lifelines.skip})</button>
               </div>
               ${hintOpen ? `<div class="hint-box">💡 ${escapeHtml(q.hint || "No hint")}</div>` : ""}`
-            : `<div class="explain-box"><strong>Explanation:</strong> ${escapeHtml(q.explanation || "")}</div>
+            : `<div class="explain-box" id="answerFeedback" tabindex="-1" role="status" aria-live="polite"><strong>Explanation:</strong> ${escapeHtml(q.explanation || "")}</div>
+               ${q.evidenceQuote ? `<blockquote class="question-evidence">Source: ${escapeHtml(q.evidenceQuote)}</blockquote>` : ""}
                <div style="text-align:center"><button type="button" class="next-btn" id="nextBtn">${
                  index + 1 >= questions.length
                    ? "See results →"
@@ -365,6 +377,8 @@ function render() {
     } else {
       document.getElementById("nextBtn")?.addEventListener("click", next);
     }
+    const focusTarget = document.getElementById(phase === "reveal" ? "answerFeedback" : "questionPrompt");
+    if (focusTarget) focusTarget.focus({ preventScroll: true });
     return;
   }
 
@@ -384,18 +398,21 @@ function render() {
           <div class="stat"><div class="val">${maxStreak}</div><div class="lbl">Best streak</div></div>
         </div>
         <div class="save-row">
+          <label class="sr-only" for="playerName">Your leaderboard name</label>
           <input type="text" id="playerName" placeholder="Your name" maxlength="24" />
           <button type="button" id="saveBtn">Save to leaderboard</button>
         </div>
-        <p id="saveMsg" style="margin-top:0.5rem;font-size:0.8rem;color:rgba(255,255,255,0.5)"></p>
+        <p id="saveMsg" role="status" aria-live="polite" style="margin-top:0.5rem;font-size:0.8rem;color:rgba(255,255,255,0.5)"></p>
         <div class="leaderboard" id="lb"></div>
         <div class="action-row">
           <button type="button" id="retryBtn">Play again</button>
+          ${correctCount < questions.length ? `<button type="button" id="reviewBtn">Review ${questions.length - correctCount} missed</button>` : ""}
           <button type="button" id="regenerateBtn">Generate new version</button>
           <button type="button" id="shareBtn">Copy link</button>
           <a href="/">Forge another</a>
           <a href="/library">Library</a>
         </div>
+        <section class="review-list hidden" id="reviewList" aria-label="Missed question review"></section>
       </div>`;
 
     document.getElementById("retryBtn").onclick = () => {
@@ -408,12 +425,26 @@ function render() {
       questions = dealQuestions(quiz.questions);
       start();
     };
+    document.getElementById("reviewBtn")?.addEventListener("click", () => {
+      const reviewList = document.getElementById("reviewList");
+      const missed = answers.filter((answer) => !answer.correct);
+      reviewList.innerHTML = `<h2>Review your missed questions</h2>${missed.map((answer) => {
+        const questionIndex = questions.findIndex((item) => item.id === answer.questionId);
+        const question = questions[questionIndex];
+        const chosenText = question.options.find((option) => option.id === answer.chosenId)?.text || "No answer selected";
+        const correctText = question.options.find((option) => option.id === question.correctOptionId)?.text || "";
+        return `<article class="review-item"><h3>Question ${questionIndex + 1}: ${renderPrompt(question.prompt)}</h3><p>Your answer: ${escapeHtml(chosenText)}</p><p class="review-correct">Correct answer: ${escapeHtml(correctText)}</p><p><strong>Why:</strong> ${escapeHtml(question.explanation || "")}</p>${question.evidenceQuote ? `<blockquote>${escapeHtml(question.evidenceQuote)}</blockquote>` : ""}</article>`;
+      }).join("")}`;
+      reviewList.classList.remove("hidden");
+      reviewList.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+    });
     document.getElementById("shareBtn").onclick = async () => {
+      const btn = document.getElementById("shareBtn");
       try {
         await navigator.clipboard.writeText(window.location.href);
-        document.getElementById("shareBtn").textContent = "Copied!";
+        btn.textContent = "Link copied";
       } catch {
-        /* ignore */
+        btn.textContent = "Copy unavailable — use the address bar";
       }
     };
     document.getElementById("regenerateBtn").onclick = async () => {
@@ -442,6 +473,8 @@ async function saveScore() {
   const btn = document.getElementById("saveBtn");
   if (btn.disabled) return;
   btn.disabled = true;
+  const msg = document.getElementById("saveMsg");
+  msg.textContent = "Saving score…";
   try {
     const res = await fetch(`/api/quiz/${code}/attempt`, {
       method: "POST",
@@ -457,21 +490,25 @@ async function saveScore() {
       }),
     });
     const data = await res.json();
-    const msg = document.getElementById("saveMsg");
+    if (!res.ok) throw new Error(data.error || "Could not save your score.");
     msg.textContent = data.rank ? `Saved! Rank #${data.rank}` : "Saved!";
     renderLeaderboard(data.leaderboard || []);
-  } catch {
+  } catch (error) {
     btn.disabled = false;
+    msg.textContent = error.message || "Could not save your score. Try again.";
   }
 }
 
 async function loadLeaderboard() {
+  const leaderboard = document.getElementById("lb");
+  if (leaderboard) leaderboard.textContent = "Loading leaderboard…";
   try {
     const res = await fetch(`/api/quiz/${code}/attempt`);
+    if (!res.ok) throw new Error("Leaderboard unavailable");
     const data = await res.json();
     renderLeaderboard(data.leaderboard || []);
   } catch {
-    /* ignore */
+    if (leaderboard) leaderboard.textContent = "Leaderboard is unavailable right now.";
   }
 }
 
@@ -479,7 +516,7 @@ function renderLeaderboard(rows) {
   const el = document.getElementById("lb");
   if (!el) return;
   if (!rows.length) {
-    el.innerHTML = "";
+    el.innerHTML = "<p>No scores posted yet. Be the first to make the board.</p>";
     return;
   }
   el.innerHTML = `<h3>Leaderboard</h3>${rows
@@ -495,6 +532,8 @@ function renderLeaderboard(rows) {
 }
 
 document.addEventListener("keydown", (e) => {
+  if (e.target instanceof Element && e.target.closest("input, textarea, select, [contenteditable='true']")) return;
+  if (e.target instanceof Element && e.target.closest("button, a") && (e.key === "Enter" || e.key === " ")) return;
   if (phase === "intro" && e.key === "Enter") start();
   else if (phase === "playing" && questions[index]) {
     const n = Number(e.key);
