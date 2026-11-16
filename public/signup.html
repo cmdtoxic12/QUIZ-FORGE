@@ -5,6 +5,113 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sign up · QuizForge</title>
     <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      .auth-wrap {
+        max-width: 420px;
+        margin: 4rem auto;
+        padding: 0 1.25rem;
+      }
+      .auth-card {
+        padding: 2rem;
+      }
+      .auth-card h1 {
+        font-size: 1.75rem;
+        margin-bottom: 0.5rem;
+        text-align: center;
+      }
+      .auth-card p.sub {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.55);
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+      }
+      .auth-card label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 0.35rem;
+      }
+      .field {
+        position: relative;
+        margin-bottom: 1rem;
+      }
+      .auth-card input {
+        width: 100%;
+        padding: 0.85rem 2.75rem 0.85rem 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(0, 0, 0, 0.3);
+        color: white;
+        font-size: 0.95rem;
+      }
+      .auth-card input:focus {
+        outline: none;
+        border-color: #a78bfa;
+      }
+      .toggle-pass {
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.55);
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 700;
+      }
+      .reqs {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 1rem;
+        font-size: 0.8rem;
+      }
+      .reqs li {
+        margin: 0.3rem 0;
+        color: rgba(255, 255, 255, 0.45);
+      }
+      .reqs li.ok {
+        color: #4ade80;
+      }
+      .reqs li.ok::before {
+        content: "✓ ";
+      }
+      .reqs li:not(.ok)::before {
+        content: "○ ";
+      }
+      .match-msg {
+        font-size: 0.8rem;
+        margin: -0.5rem 0 1rem;
+        color: rgba(255, 255, 255, 0.45);
+      }
+      .match-msg.ok {
+        color: #4ade80;
+      }
+      .match-msg.bad {
+        color: #fb7185;
+      }
+      .switch {
+        text-align: center;
+        margin-top: 1.25rem;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.55);
+      }
+      .switch a {
+        color: #67e8f9;
+        text-decoration: none;
+        font-weight: 700;
+      }
+      .error-box {
+        margin-bottom: 1rem;
+        color: #fb7185;
+        font-size: 0.85rem;
+      }
+      .gen-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    </style>
   </head>
   <body>
     <div class="aurora"></div>
@@ -13,7 +120,7 @@
         <h1>Create account</h1>
         <p class="sub">Start forging quizzes in seconds</p>
 
-        <div class="error-box hidden" id="errorBox" role="alert"></div>
+        <div class="error-box hidden" id="errorBox"></div>
 
         <form id="signupForm">
           <label for="email">Email</label>
@@ -21,7 +128,6 @@
             <input
               type="email"
               id="email"
-              autocomplete="email"
               required
               placeholder="you@example.com"
             />
@@ -32,10 +138,8 @@
             <input
               type="password"
               id="password"
-              autocomplete="new-password"
               required
               minlength="10"
-              maxlength="72"
               placeholder="At least 10 characters"
             />
             <button type="button" class="toggle-pass" data-target="password">
@@ -43,9 +147,8 @@
             </button>
           </div>
 
-          <ul class="reqs" role="status" aria-live="polite">
+          <ul class="reqs">
             <li id="req-len">At least 10 characters</li>
-            <li id="req-bytes">No more than 72 UTF-8 bytes</li>
           </ul>
 
           <label for="confirm">Confirm password</label>
@@ -53,17 +156,15 @@
             <input
               type="password"
               id="confirm"
-              autocomplete="new-password"
               required
               minlength="10"
-              maxlength="72"
               placeholder="Re-enter password"
             />
             <button type="button" class="toggle-pass" data-target="confirm">
               Show
             </button>
           </div>
-          <p class="match-msg" id="matchMsg" role="status" aria-live="polite">Passwords must match</p>
+          <p class="match-msg" id="matchMsg">Passwords must match</p>
 
           <button type="submit" class="gen-btn" id="submitBtn" disabled>
             Sign up
@@ -105,9 +206,7 @@
         const confirm = confirmInput.value;
 
         const longEnough = password.length >= 10;
-        const withinByteLimit = new TextEncoder().encode(password).length <= 72;
         document.getElementById("req-len").classList.toggle("ok", longEnough);
-        document.getElementById("req-bytes").classList.toggle("ok", withinByteLimit);
 
         const matches = confirm.length > 0 && password === confirm;
         if (!confirm) {
@@ -121,8 +220,8 @@
           matchMsg.className = "match-msg bad";
         }
 
-        submitBtn.disabled = !(longEnough && withinByteLimit && matches);
-        return longEnough && withinByteLimit && matches;
+        submitBtn.disabled = !(longEnough && matches);
+        return longEnough && matches;
       }
 
       passwordInput.addEventListener("input", validate);

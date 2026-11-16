@@ -4,8 +4,6 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const multer = require("multer");
 const path = require("path");
-const crypto = require("crypto");
-const jwt = require("jsonwebtoken");
 const { extractText, validateUpload } = require("./lib/extract");
 const { sampleAcrossDocument } = require("./lib/text");
 const { config, validateConfig } = require("./lib/config");
@@ -34,7 +32,6 @@ const store =
     : jsonStore;
 const app = express();
 const MAX_BYTES = 12 * 1024 * 1024;
-const MAX_TOTAL_UPLOAD_BYTES = 24 * 1024 * 1024;
 const MAX_SOURCE_CHARS = 140000;
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const makeCode = (length = 7) =>
@@ -48,53 +45,23 @@ app.disable("x-powered-by");
 app.use(requestId);
 app.use(
   helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: [
-          "'self'",
-          "'sha256-Fu42Isz6usX9624LvhAsDckpJXCxPq368rZrfwQ7YAs='",
-          "'sha256-Nl3vJensQZTo0+BKhE8gk8qemtMp+FZW1/tsBiElnjg='",
-          "'sha256-xeFzLyvTRy/Wg/oeWT81ZFvdkli9KhcpcJ5KLepjeOQ='",
-        ],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", "data:"],
-        fontSrc: ["'self'", "data:"],
-        connectSrc: ["'self'"],
-        objectSrc: ["'none'"],
-        baseUri: ["'self'"],
-        formAction: ["'self'"],
-        frameAncestors: ["'none'"],
-        upgradeInsecureRequests: config.isProduction ? [] : null,
-      },
-    },
+    contentSecurityPolicy: false,
     crossOriginResourcePolicy: { policy: "same-origin" },
   }),
 );
 app.use(
-  (req, _res, next) => {
-    const origin = req.get("origin");
-    if (!origin || config.corsOrigins.includes(origin)) return next();
-    if (config.corsOrigins.length) return next(apiError(403, "Origin is not allowed."));
-    try {
-      const parsed = new URL(origin);
-      const forwardedProto = String(req.headers["x-forwarded-proto"] || req.protocol)
-        .split(",")[0]
-        .trim();
-      if (parsed.host === req.get("host") && parsed.protocol === `${forwardedProto}:`)
-        return next();
-    } catch {}
-    return next(apiError(403, "Origin is not allowed."));
-  },
-);
-app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || config.corsOrigins.includes(origin)) return callback(null, true);
-      return callback(null, false);
+      if (
+        !origin ||
+        !config.corsOrigins.length ||
+        config.corsOrigins.includes(origin)
+      )
+        return callback(null, true);
+      return callback(apiError(403, "Origin is not allowed."));
     },
     methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Admin-Token"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
 app.use(express.json({ limit: "2mb" }));
@@ -113,32 +80,8 @@ app.use(
     maxAge: config.isProduction ? "1h" : 0,
   }),
 );
-const boundedMemoryStorage = {
-  _handleFile(req, file, callback) {
-    const chunks = [];
-    let fileSize = 0;
-    req.uploadBytes = req.uploadBytes || 0;
-    file.stream.on("data", (chunk) => {
-      fileSize += chunk.length;
-      req.uploadBytes += chunk.length;
-      if (req.uploadBytes > MAX_TOTAL_UPLOAD_BYTES) {
-        file.stream.destroy(apiError(413, "Combined upload size exceeds the 24 MB limit."));
-        return;
-      }
-      chunks.push(chunk);
-    });
-    file.stream.once("error", callback);
-    file.stream.once("end", () =>
-      callback(null, { buffer: Buffer.concat(chunks), size: fileSize }),
-    );
-  },
-  _removeFile(_req, file, callback) {
-    delete file.buffer;
-    callback(null);
-  },
-};
 const upload = multer({
-  storage: boundedMemoryStorage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: MAX_BYTES, files: 5 },
   fileFilter(_req, file, cb) {
     cb(null, Boolean(path.extname(file.originalname)));
@@ -170,26 +113,7 @@ app.get("/api/quizzes", async (_req, res, next) => {
 
 // ===== Auth Routes =====
 
-const registrationLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  limit: 5,
-  standardHeaders: "draft-7",
-  legacyHeaders: false,
-});
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 10,
-  standardHeaders: "draft-7",
-  legacyHeaders: false,
-});
-const attemptLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 30,
-  standardHeaders: "draft-7",
-  legacyHeaders: false,
-});
-
-app.post("/api/auth/register", registrationLimiter, async (req, res, next) => {
+app.post("/api/auth/register", async (req, res, next) => {
   try {
     const credentials = validateCredentials(req.body || {});
     if (await maybeAwait(store.findUserByEmail(credentials.email))) {
@@ -210,7 +134,7 @@ app.post("/api/auth/register", registrationLimiter, async (req, res, next) => {
   }
 });
 
-app.post("/api/auth/login", loginLimiter, async (req, res, next) => {
+app.post("/api/auth/login", async (req, res, next) => {
   try {
     const credentials = validateCredentials(req.body || {});
     const user = await maybeAwait(store.findUserByEmail(credentials.email));
@@ -227,6 +151,12 @@ app.post("/api/auth/login", loginLimiter, async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+});
+
+app.get("/api/auth/me", optionalAuth, requireAuth, (req, res) => {
+  res.json({
+    user: { id: req.user.sub, email: req.user.email },
+  });
 });
 
 // Current user
@@ -346,8 +276,9 @@ app.get("/api/quiz/:code", async (req, res, next) => {
       engine: quiz.engine,
       difficulty: quiz.difficulty,
       keywords: quiz.keywords || [],
+      sourceNames: quiz.sourceNames || [],
       wordCount: quiz.wordCount || 0,
-      questions: (quiz.questions || []).map(({ evidenceQuote, sourceId, ...question }) => question),
+      questions: quiz.questions,
     });
   } catch (err) {
     next(err);
@@ -417,40 +348,19 @@ app.get("/api/quiz/:code/attempt", async (req, res, next) => {
     next(err);
   }
 });
-app.post("/api/quiz/:code/attempt", attemptLimiter, async (req, res, next) => {
+app.post("/api/quiz/:code/attempt", async (req, res, next) => {
   try {
     const code = req.params.code.toUpperCase();
-    const quiz = await maybeAwait(store.getQuiz(code));
-    if (!quiz) throw apiError(404, "Quiz not found.");
+    if (!(await maybeAwait(store.getQuiz(code))))
+      throw apiError(404, "Quiz not found.");
     const body = req.body || {};
-    const questionCount = quiz.questions?.length || Number(quiz.questionCount) || 0;
-    const isNonNegativeInteger = (value) => Number.isSafeInteger(value) && value >= 0;
-    if (
-      !isNonNegativeInteger(body.score) ||
-      !isNonNegativeInteger(body.correct) ||
-      !isNonNegativeInteger(body.total) ||
-      !isNonNegativeInteger(body.maxStreak) ||
-      !isNonNegativeInteger(body.durationMs) ||
-      body.total !== questionCount ||
-      body.correct > body.total ||
-      body.maxStreak > body.correct ||
-      body.durationMs > 24 * 60 * 60 * 1000
-    ) {
-      throw apiError(400, "Score details are outside the allowed range.", "INVALID_ATTEMPT");
-    }
-    const maxScore = (quiz.questions || []).reduce(
-      (total, question) => total + (Number(question.points) || 0) + 150,
-      0,
-    );
-    if (body.score > maxScore)
-      throw apiError(400, "Score exceeds the maximum possible for this quiz.", "INVALID_ATTEMPT");
     const attempt = {
-      playerName: cleanTextInput(body.playerName, 50).replace(/[\r\n\t]+/g, " ") || "Anonymous",
-      score: body.score,
-      correct: body.correct,
-      total: body.total,
-      maxStreak: body.maxStreak,
-      durationMs: body.durationMs,
+      playerName: cleanTextInput(body.playerName, 50) || "Anonymous",
+      score: Math.max(0, Number(body.score) || 0),
+      correct: Math.max(0, Number(body.correct) || 0),
+      total: Math.max(0, Number(body.total) || 0),
+      maxStreak: Math.max(0, Number(body.maxStreak) || 0),
+      durationMs: Math.max(0, Number(body.durationMs) || 0),
     };
     res.json(await maybeAwait(store.addAttempt(code, attempt)));
   } catch (err) {
@@ -497,7 +407,8 @@ module.exports = app;
 // ADMIN + VISITOR TRACKING
 // ======================
 
-const adminPassword = config.adminPassword;
+const adminPassword = process.env.ADMIN_PASSWORD || "";
+const crypto = require("crypto");
 
 // ----- Visitor ID helper -----
 function getVisitorId(req) {
@@ -509,7 +420,16 @@ function getVisitorId(req) {
 
   if (cookieId && cookieId.length > 8) return cookieId;
 
-  return crypto.randomUUID();
+  const ip =
+    req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+    req.socket?.remoteAddress ||
+    "unknown";
+  const ua = req.headers["user-agent"] || "";
+  return crypto
+    .createHash("sha256")
+    .update(ip + ua)
+    .digest("hex")
+    .slice(0, 16);
 }
 
 // ----- Track every page view -----
@@ -527,7 +447,7 @@ async function trackVisit(req, res, next) {
     if (!req.headers.cookie?.includes("qf_vid=")) {
       res.setHeader(
         "Set-Cookie",
-        `qf_vid=${visitorId}; Path=/; Max-Age=31536000; SameSite=Lax; HttpOnly${config.isProduction ? "; Secure" : ""}`,
+        `qf_vid=${visitorId}; Path=/; Max-Age=31536000; SameSite=Lax`,
       );
     }
 
@@ -555,43 +475,20 @@ app.use(trackVisit);
 
 // ----- Admin Auth -----
 function requireAdmin(req, res, next) {
-  const token = req.headers["x-admin-token"];
-  if (!adminPassword || !token) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-  try {
-    const claims = jwt.verify(token, config.jwtSecret, {
-      issuer: "quizforge-admin",
-      audience: "quizforge-admin",
-    });
-    if (claims.scope !== "admin") throw new Error("Invalid scope");
-  } catch {
+  const token = req.headers["x-admin-token"] || req.query.token;
+  if (!adminPassword || token !== adminPassword) {
     return res.status(401).json({ error: "Unauthorized" });
   }
   next();
 }
 
 // ----- Admin Login -----
-const adminLoginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 5,
-  standardHeaders: "draft-7",
-  legacyHeaders: false,
-});
-app.post("/api/admin/login", adminLoginLimiter, (req, res) => {
+app.post("/api/admin/login", (req, res) => {
   const { password } = req.body || {};
-  const submitted = Buffer.from(typeof password === "string" ? password : "");
-  const expected = Buffer.from(adminPassword);
-  const matches = expected.length > 0 && submitted.length === expected.length && crypto.timingSafeEqual(submitted, expected);
-  if (!matches) {
+  if (!adminPassword || password !== adminPassword) {
     return res.status(401).json({ error: "Wrong password" });
   }
-  const token = jwt.sign(
-    { scope: "admin" },
-    config.jwtSecret,
-    { expiresIn: "15m", issuer: "quizforge-admin", audience: "quizforge-admin" },
-  );
-  res.json({ token, expiresIn: 900 });
+  res.json({ token: adminPassword });
 });
 
 // ----- Admin Stats -----
@@ -750,14 +647,7 @@ app.get("/api/admin/stats", requireAdmin, async (req, res, next) => {
       })),
       topQuizzes: [...quizzes]
         .sort((a, b) => (b.plays || 0) - (a.plays || 0))
-        .slice(0, 10)
-        .map((q) => ({
-          code: q.code,
-          title: q.title,
-          plays: q.plays || 0,
-          questionCount: q.questionCount,
-          difficulty: q.difficulty,
-        })),
+        .slice(0, 10),
       topPlayers: allAttempts.slice(0, 15),
       recentAttempts: [...allAttempts]
         .sort((a, b) => (b.at || 0) - (a.at || 0))

@@ -16,7 +16,7 @@
     <meta property="og:url" content="https://quiz-forge-xi.vercel.app/" />
     <meta
       property="og:image"
-      content="https://quiz-forge-xi.vercel.app/logo.png"
+      content="https://quiz-forge-xi.vercel.app//logo.png"
     />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -47,14 +47,13 @@
           <span>QuizForge</span>
         </a>
         <div class="nav-links">
-          <a href="#myQuizzes" id="myQuizzesNav" class="hidden">My Quizzes</a>
+          <a href="#myQuizzes">My Quizzes</a>
           <a href="/library">Library</a>
-          <div class="nav-auth" id="authLinks">
-            <a href="/login">Log in</a>
-            <a href="/signup" class="nav-signup">Create account</a>
-          </div>
-          <span id="userEmail" class="user-email hidden"></span>
-          <button type="button" class="btn btn-ghost hidden" id="logoutBtn">
+          <span
+            id="userEmail"
+            style="color: rgba(255, 255, 255, 0.5); font-size: 0.85rem"
+          ></span>
+          <button type="button" class="btn btn-ghost" id="logoutBtn">
             Logout
           </button>
         </div>
@@ -63,16 +62,17 @@
       <section class="hero">
         <div>
           <span class="badge"
-            ><span class="dot"></span><span id="engineStatus">Quiz engine ready</span></span
+            ><span class="dot"></span> Local NLP agent online</span
           >
           <h1>
             Turn any document into a
             <span class="text-gradient">quiz game</span> in seconds.
           </h1>
           <p class="lead">
-            Upload lecture notes, a research PDF, onboarding material, or paste
-            text. QuizForge builds a timed quiz from your source, with clear
-            explanations, lifelines, and a shareable leaderboard.
+            Drop in lecture notes, a research PDF, onboarding docs or messy
+            markdown. The agent mines the facts, invents believable wrong
+            answers, and hands you a timed arcade quiz with streaks, lifelines
+            and a leaderboard.
           </p>
           <div class="steps">
             <div class="step glass">
@@ -83,7 +83,7 @@
             <div class="step glass">
               <div class="emoji">🧠</div>
               <h3>Analyse</h3>
-              <p>Key ideas, terms, and facts are extracted.</p>
+              <p>Sentences ranked, entities and figures mined.</p>
             </div>
             <div class="step glass">
               <div class="emoji">🕹️</div>
@@ -95,16 +95,10 @@
 
         <div class="builder glass glow-ring" id="builder">
           <div class="builder-title">
-            <h2>Create a quiz</h2>
+            <h2>Feed the agent 🍽️</h2>
             <button type="button" class="btn btn-ghost" id="sampleBtn">
-              Use sample notes
+              ✨ Try a sample
             </button>
-          </div>
-
-          <div class="auth-notice hidden" id="authNotice">
-            <strong>An account is required to generate a quiz.</strong>
-            <span>Sign in before uploading; file selections cannot be restored after sign-in.</span>
-            <div><a href="/login">Log in</a><a href="/signup">Create account</a></div>
           </div>
 
           <div
@@ -117,13 +111,14 @@
             <div class="icon">📄</div>
             <p>Drop documents here</p>
             <p class="hint">
-              PDF · DOCX · TXT · MD · CSV · JSON · HTML — up to 5 files, 12 MB each, 24 MB combined. Images require OCR.
+              PDF · DOCX · TXT · MD · CSV · JSON · HTML — up to 5 files, 12 MB
+              each
             </p>
             <input
               type="file"
               id="fileInput"
               multiple
-              accept=".pdf,.docx,.png,.jpg,.jpeg,.webp,.txt,.md,.markdown,.csv,.tsv,.json,.html,.htm,.xml,.yml,.yaml,.srt,.tex,.log,.rtf"
+              accept=".pdf,.docx,.png,.jpg,.jpeg,.webp,.txt,.md,.markdown,.csv,.tsv,.json,.html,.htm,.xml,.yml,.yaml,.srt,.tex,.log"
               hidden
             />
           </div>
@@ -149,22 +144,22 @@
               <input type="range" id="count" min="5" max="20" value="10" />
             </div>
             <div>
-              <label>Difficulty</label>
-              <div class="diff-grid" id="diffGrid" role="group" aria-label="Choose quiz difficulty">
-                <button type="button" class="diff-btn" data-d="easy" aria-pressed="false">
+              <label>Intensity</label>
+              <div class="diff-grid" id="diffGrid">
+                <button type="button" class="diff-btn" data-d="easy">
                   🍃 Warm-up
                 </button>
-                <button type="button" class="diff-btn active" data-d="mixed" aria-pressed="true">
+                <button type="button" class="diff-btn active" data-d="mixed">
                   🎯 Balanced
                 </button>
-                <button type="button" class="diff-btn" data-d="hard" aria-pressed="false">
-                  🔥 Advanced
+                <button type="button" class="diff-btn" data-d="hard">
+                  🔥 Brutal
                 </button>
               </div>
             </div>
           </div>
 
-          <p class="error-box hidden" id="errorBox" role="alert"></p>
+          <p class="error-box hidden" id="errorBox"></p>
 
           <button type="button" class="gen-btn" id="genBtn">
             🎮 Generate my quiz game
@@ -176,10 +171,10 @@
       </section>
 
       <section class="section" id="how">
-        <h2>How QuizForge builds a quiz</h2>
+        <h2>What the agent actually does</h2>
         <p class="sub">
-          Question styles draw from definitions, key terms, figures, and facts
-          found in your study material.
+          Five question generators run over your text, then compete for a slot
+          in the final game.
         </p>
         <div class="cards">
           <div class="card glass">
@@ -208,7 +203,7 @@
           </div>
           <div class="card glass">
             <div class="emoji">🕵️</div>
-            <h3>Source checks</h3>
+            <h3>Truth spotting</h3>
             <p>
               Corrupts sentences by swapping entities or flipping claims — only
               one option survives verbatim.
@@ -219,7 +214,7 @@
             <h3>Fact check rounds</h3>
             <p>
               Fast true/false statements with quiet entity swaps and negations
-              to help distinguish supported claims from close distractors.
+              to catch skim-readers.
             </p>
           </div>
           <div class="card glass">
@@ -255,10 +250,9 @@
           >
         </div>
         <div class="recent-grid" id="recentGrid"></div>
-        <p class="library-status" id="recentStatus" role="status" aria-live="polite">Loading recent quizzes…</p>
       </section>
 
-      <section class="section hidden" id="myQuizzes">
+      <section class="section" id="myQuizzes">
         <h2>My Quizzes</h2>
         <p class="sub">Quizzes you have forged</p>
         <div class="recent-grid" id="myQuizzesGrid"></div>
@@ -275,7 +269,7 @@
         </p>
       </section>
 
-      <footer>QuizForge · Source-based study quizzes</footer>
+      <footer>QuizForge · local NLP · HTML + Express</footer>
     </div>
     <script src="/js/auth.js"></script>
     <script src="/js/home.js"></script>

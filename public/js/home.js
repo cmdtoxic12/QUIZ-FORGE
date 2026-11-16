@@ -1,35 +1,14 @@
-const authLinks = document.getElementById("authLinks");
-const userEmail = document.getElementById("userEmail");
-const logoutBtn = document.getElementById("logoutBtn");
-const myQuizzes = document.getElementById("myQuizzes");
-const myQuizzesNav = document.getElementById("myQuizzesNav");
-const authNotice = document.getElementById("authNotice");
-const engineStatus = document.getElementById("engineStatus");
-const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+// Require login
+(async () => {
+  const user = await Auth.requireLogin();
+  if (!user) return;
 
-const signedInUser = Auth.getUser();
-if (Auth.getToken() && signedInUser?.email) {
-  authLinks.classList.add("hidden");
-  userEmail.textContent = signedInUser.email;
-  userEmail.classList.remove("hidden");
-  logoutBtn.classList.remove("hidden");
-  myQuizzes.classList.remove("hidden");
-  myQuizzesNav.classList.remove("hidden");
-  logoutBtn.onclick = Auth.logout;
+  document.getElementById("userEmail").textContent = user.email;
+  document.getElementById("logoutBtn").onclick = Auth.logout;
+
+  // Load My Quizzes
   loadMyQuizzes();
-  authNotice.classList.add("hidden");
-} else {
-  authNotice.classList.remove("hidden");
-}
-
-fetch("/api/health")
-  .then((res) => (res.ok ? res.json() : null))
-  .then((data) => {
-    if (!data?.engine) return;
-    const labels = { local: "Local quiz engine ready", gemini: "Gemini quiz engine ready", openai: "OpenAI quiz engine ready" };
-    engineStatus.textContent = labels[data.engine] || "Quiz engine ready";
-  })
-  .catch(() => {});
+})();
 const SAMPLE = `Photosynthesis is the process by which green plants convert light energy into chemical energy stored in glucose. The reaction takes place inside chloroplasts, organelles that contain the green pigment chlorophyll.
 Chlorophyll absorbs light most strongly in the blue and red parts of the spectrum, which is why leaves appear green to the human eye.
 The light-dependent reactions occur in the thylakoid membranes and split water molecules, releasing oxygen as a by-product. Roughly 330 billion tonnes of oxygen are produced by photosynthesis every year.
@@ -37,16 +16,20 @@ The Calvin cycle is a light-independent stage that fixes carbon dioxide into sug
 Melvin Calvin received the Nobel Prize in Chemistry in 1961 for mapping this carbon fixation pathway.
 Rates of photosynthesis increase with light intensity until a plateau is reached, after which carbon dioxide concentration or temperature becomes the limiting factor.`;
 
-const SUPPORTED_EXTENSIONS = [
-  ".pdf", ".docx", ".png", ".jpg", ".jpeg", ".webp", ".txt", ".md",
-  ".markdown", ".csv", ".tsv", ".json", ".html", ".htm", ".xml",
-  ".yml", ".yaml", ".srt", ".tex", ".log", ".rtf",
+const STAGES = [
+  "Reading your documents…",
+  "Extracting key concepts…",
+  "Ranking the juiciest facts…",
+  "Writing tricky distractors…",
+  "Balancing difficulty curve…",
+  "Loading the arcade…",
 ];
-const MAX_TOTAL_FILE_BYTES = 24 * 1024 * 1024;
 
 const files = [];
 let difficulty = "mixed";
 let loading = false;
+let stageIdx = 0;
+let stageTimer = null;
 
 const dropzone = document.getElementById("dropzone");
 const fileInput = document.getElementById("fileInput");
@@ -98,37 +81,14 @@ function escapeHtml(s) {
   );
 }
 
-function difficultyLabel(value) {
-  return ({ easy: "Warm-up", mixed: "Balanced", hard: "Advanced" })[value] || "Balanced";
-}
-
 function addFiles(list) {
-  const errors = [];
   for (const f of list) {
-    const ext = `.${f.name.split(".").pop()}`.toLowerCase();
-    if (!SUPPORTED_EXTENSIONS.includes(ext)) {
-      errors.push(`${f.name}: unsupported file type.`);
-      continue;
-    }
-    if (f.size > 12 * 1024 * 1024) {
-      errors.push(`${f.name}: larger than the 12 MB limit.`);
-      continue;
-    }
-    if (files.some((x) => x.name === f.name && x.size === f.size)) continue;
-    if (files.length >= 5) {
-      errors.push("You can add up to 5 files.");
-      break;
-    }
-    const currentBytes = files.reduce((total, file) => total + file.size, 0);
-    if (currentBytes + f.size > MAX_TOTAL_FILE_BYTES) {
-      errors.push("Combined file size cannot exceed 24 MB.");
-      continue;
-    }
-    files.push(f);
+    if (files.length >= 5) break;
+    if (!files.some((x) => x.name === f.name && x.size === f.size))
+      files.push(f);
   }
   renderFiles();
-  errorBox.textContent = errors.join(" ");
-  errorBox.classList.toggle("hidden", errors.length === 0);
+  errorBox.classList.add("hidden");
 }
 
 dropzone.addEventListener("click", () => fileInput.click());
@@ -177,7 +137,6 @@ document.querySelectorAll(".diff-btn").forEach((btn) => {
       .querySelectorAll(".diff-btn")
       .forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
-    document.querySelectorAll(".diff-btn").forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
     difficulty = btn.dataset.d;
   });
 });
@@ -192,18 +151,15 @@ genBtn.addEventListener("click", async () => {
     return;
   }
 
-  if (!Auth.getToken()) {
-    authNotice.classList.remove("hidden");
-    authNotice.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "center" });
-    authNotice.querySelector("a")?.focus({ preventScroll: true });
-    return;
-  }
-
   loading = true;
+  stageIdx = 0;
   genBtn.disabled = true;
-  genBtn.setAttribute("aria-busy", "true");
-  genBtn.innerHTML = `<span class="spinner" aria-hidden="true"></span>Generating your quiz…`;
+  genBtn.innerHTML = `<span class="spinner"></span>${STAGES[0]}`;
   errorBox.classList.add("hidden");
+  stageTimer = setInterval(() => {
+    stageIdx = Math.min(stageIdx + 1, STAGES.length - 1);
+    genBtn.innerHTML = `<span class="spinner"></span>${STAGES[stageIdx]}`;
+  }, 1100);
 
   try {
     const body = new FormData();
@@ -218,10 +174,8 @@ genBtn.addEventListener("click", async () => {
       body,
     });
     const data = await res.json();
-    if (!res.ok || !data.code) {
-      if (res.status === 401) authNotice.classList.remove("hidden");
+    if (!res.ok || !data.code)
       throw new Error(data.error || "Generation failed.");
-    }
     window.location.href = `/play/${data.code}`;
   } catch (err) {
     errorBox.textContent = err.message || "Generation failed.";
@@ -229,7 +183,7 @@ genBtn.addEventListener("click", async () => {
     loading = false;
     genBtn.disabled = false;
     genBtn.textContent = "🎮 Generate my quiz game";
-    genBtn.removeAttribute("aria-busy");
+    clearInterval(stageTimer);
   }
 });
 
@@ -238,25 +192,22 @@ async function loadMyQuizzes() {
     const res = await fetch("/api/quizzes/mine", {
       headers: Auth.authHeaders(),
     });
-    if (!res.ok) throw new Error("Could not load your quizzes.");
     const data = await res.json();
     const list = data.quizzes || [];
     const grid = document.getElementById("myQuizzesGrid");
     const empty = document.getElementById("myQuizzesEmpty");
 
     if (!list.length) {
-      document.getElementById("myQuizzesGrid").innerHTML = "";
       empty.classList.remove("hidden");
       return;
     }
-    empty.classList.add("hidden");
 
     grid.innerHTML = list
       .slice(0, 8)
       .map(
         (q) => `
       <a class="quiz-card glass" href="/play/${q.code}">
-        <div class="diff">${difficultyLabel(q.difficulty || "mixed")}</div>
+        <div class="diff">${escapeHtml(q.difficulty || "mixed")}</div>
         <div class="title">${escapeHtml(q.title)}</div>
         <div class="meta">${q.questionCount || 0} questions · ${q.plays || 0} plays</div>
         <span class="play">Play →</span>
@@ -264,32 +215,27 @@ async function loadMyQuizzes() {
       )
       .join("");
   } catch {
-    const empty = document.getElementById("myQuizzesEmpty");
-    empty.textContent = "Could not load your quizzes. Refresh the page to try again.";
-    empty.classList.remove("hidden");
+    /* ignore */
   }
 }
 
 async function loadRecent() {
   try {
     const res = await fetch("/api/quizzes");
-    if (!res.ok) throw new Error("Could not load recent quizzes.");
     const data = await res.json();
     const list = data.quizzes || [];
     const grid = document.getElementById("recentGrid");
     const section = document.getElementById("recentSection");
-    const status = document.getElementById("recentStatus");
     if (!list.length) {
       section.classList.add("hidden");
       return;
     }
-    status.classList.add("hidden");
     grid.innerHTML = list
       .slice(0, 4)
       .map(
         (q) => `
       <a class="quiz-card glass" href="/play/${q.code}">
-        <div class="diff">${difficultyLabel(q.difficulty || "mixed")}</div>
+        <div class="diff">${escapeHtml(q.difficulty || "mixed")}</div>
         <div class="title">${escapeHtml(q.title)}</div>
         <div class="meta">${q.questionCount} questions · ${q.plays || 0} plays</div>
         <span class="play">Play →</span>
@@ -297,8 +243,7 @@ async function loadRecent() {
       )
       .join("");
   } catch {
-    const status = document.getElementById("recentStatus");
-    status.textContent = "Could not load recent quizzes. Refresh the page to try again.";
+    /* ignore */
   }
 }
 
