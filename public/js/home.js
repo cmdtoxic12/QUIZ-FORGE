@@ -238,9 +238,41 @@ if (genBtn) {
         headers: Auth.authHeaders(),
         body,
       });
-      const data = await res.json();
-      if (!res.ok || !data.code)
-        throw new Error(data.error || "Generation failed.");
+
+      const contentType = res.headers.get("content-type") || "";
+      const raw = await res.text();
+      let data = null;
+      if (contentType.includes("application/json")) {
+        try {
+          data = JSON.parse(raw);
+        } catch {
+          throw new Error("Server returned invalid JSON. Please try again.");
+        }
+      } else {
+        // HTML or plain text — usually proxy timeout, 502, or auth redirect page
+        if (res.status === 401 || /sign in|log in|login/i.test(raw)) {
+          throw new Error("Session expired. Please sign in again.");
+        }
+        if (res.status === 413) {
+          throw new Error("Upload too large for the server. Try fewer or smaller files.");
+        }
+        if (res.status === 502 || res.status === 504 || res.status === 408) {
+          throw new Error("Server timed out while generating. Try fewer questions or a smaller document.");
+        }
+        if (res.status >= 500) {
+          throw new Error("Server error while generating the quiz. Please try again in a moment.");
+        }
+        throw new Error(
+          "Server returned a webpage instead of quiz data (often a timeout or crash). Try a smaller file, fewer questions, or paste text instead of a PDF."
+        );
+      }
+
+      if (!res.ok || !data?.code) {
+        if (res.status === 401) {
+          throw new Error("Session expired. Please sign in again.");
+        }
+        throw new Error(data?.error || "Generation failed.");
+      }
 
       setProgressStage(STAGES.length - 1);
       clearInterval(stageTimer);
@@ -249,17 +281,23 @@ if (genBtn) {
         window.location.href = `/play/${data.code}`;
       }, 600);
     } catch (err) {
+      const msg = err.message || "Generation failed.";
       if (errorBox) {
-        errorBox.textContent = err.message || "Generation failed.";
+        errorBox.textContent = msg;
         errorBox.classList.remove("hidden");
       }
-      toast(err.message || "Generation failed", "error");
+      toast(msg, "error");
       loading = false;
       genBtn.disabled = false;
       genBtn.textContent = "🎮 Generate my quiz game";
       if (genProgress) genProgress.classList.add("hidden");
       if (genProgressFill) genProgressFill.style.width = "0%";
       clearInterval(stageTimer);
+      if (/session expired/i.test(msg)) {
+        setTimeout(() => {
+          try { Auth.logout(); } catch { window.location.href = "/login"; }
+        }, 1200);
+      }
     }
   });
 }
@@ -328,3 +366,4 @@ async function loadRecent() {
 }
 
 loadRecent();
+                    
