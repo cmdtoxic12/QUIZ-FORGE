@@ -1,13 +1,18 @@
-// Require login
+// QuizForge home — null-safe DOM binding
 (async () => {
-  const user = await Auth.requireLogin();
-  if (!user) return;
+  try {
+    const user = await Auth.requireLogin();
+    if (!user) return;
 
-  document.getElementById("userEmail").textContent = user.email;
-  document.getElementById("logoutBtn").onclick = Auth.logout;
+    const emailEl = document.getElementById("userEmail");
+    const logoutBtn = document.getElementById("logoutBtn");
+    if (emailEl) emailEl.textContent = user.email || "";
+    if (logoutBtn) logoutBtn.onclick = Auth.logout;
 
-  // Load My Quizzes
-  loadMyQuizzes();
+    loadMyQuizzes();
+  } catch (err) {
+    console.warn("Auth bootstrap failed:", err);
+  }
 })();
 
 const SAMPLE = `Photosynthesis is the process by which green plants convert light energy into chemical energy stored in glucose. The reaction takes place inside chloroplasts, organelles that contain the green pigment chlorophyll.
@@ -46,7 +51,6 @@ const genProgress = document.getElementById("genProgress");
 const genProgressFill = document.getElementById("genProgressFill");
 const genStages = document.getElementById("genStages");
 
-/* ---------- Toast helper ---------- */
 function toast(message, type = "info", duration = 3200) {
   const container = document.getElementById("toastContainer");
   if (!container) return;
@@ -66,12 +70,21 @@ function formatSize(bytes) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
+function escapeHtml(s) {
+  return String(s).replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+  );
+}
+
 function renderFiles() {
+  if (!fileList) return;
   fileList.innerHTML = files
     .map(
       (f, i) => `
     <li class="file-item">
-      <span>${f.name.toLowerCase().endsWith(".pdf") ? "📕" : f.name.match(/\.(png|jpe?g|webp)$/i) ? "🖼️" : "📘"}</span>
+      <span>${f.name.toLowerCase().endsWith(".pdf") ? "📕" : /\.(png|jpe?g|webp)$/i.test(f.name) ? "🖼️" : "📘"}</span>
       <div class="meta">
         <div class="name">${escapeHtml(f.name)}</div>
         <div class="size">${formatSize(f.size)}</div>
@@ -88,16 +101,6 @@ function renderFiles() {
       toast("File removed", "info", 1800);
     });
   });
-}
-
-function escapeHtml(s) {
-  return String(s).replace(
-    /[&<>"']/g,
-    (c) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
-        c
-      ],
-  );
 }
 
 function addFiles(list) {
@@ -117,7 +120,7 @@ function addFiles(list) {
     }
   }
   renderFiles();
-  errorBox.classList.add("hidden");
+  if (errorBox) errorBox.classList.add("hidden");
   if (added) toast(`${added} file${added > 1 ? "s" : ""} added`, "success", 2000);
 }
 
@@ -133,49 +136,58 @@ function setProgressStage(idx) {
       else if (s === idx) li.classList.add("active");
     });
   }
-  genBtn.innerHTML = `<span class="spinner"></span>${STAGES[idx]}`;
+  if (genBtn) genBtn.innerHTML = `<span class="spinner"></span>${STAGES[idx]}`;
 }
 
-dropzone.addEventListener("click", () => fileInput.click());
-dropzone.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" || e.key === " ") {
+// Only bind builder events when the home builder UI is present
+if (dropzone && fileInput) {
+  dropzone.addEventListener("click", () => fileInput.click());
+  dropzone.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      fileInput.click();
+    }
+  });
+  dropzone.addEventListener("dragover", (e) => {
     e.preventDefault();
-    fileInput.click();
-  }
-});
-dropzone.addEventListener("dragover", (e) => {
-  e.preventDefault();
-  dropzone.classList.add("drag");
-});
-dropzone.addEventListener("dragleave", () => dropzone.classList.remove("drag"));
-dropzone.addEventListener("drop", (e) => {
-  e.preventDefault();
-  dropzone.classList.remove("drag");
-  if (e.dataTransfer.files?.length) addFiles(e.dataTransfer.files);
-});
-fileInput.addEventListener("change", () => {
-  if (fileInput.files) addFiles(fileInput.files);
-  fileInput.value = "";
-});
+    dropzone.classList.add("drag");
+  });
+  dropzone.addEventListener("dragleave", () => dropzone.classList.remove("drag"));
+  dropzone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropzone.classList.remove("drag");
+    if (e.dataTransfer.files?.length) addFiles(e.dataTransfer.files);
+  });
+  fileInput.addEventListener("change", () => {
+    if (fileInput.files) addFiles(fileInput.files);
+    fileInput.value = "";
+  });
+}
 
-pasteToggle.addEventListener("click", () => {
-  pasteArea.classList.toggle("hidden");
-  pasteToggle.textContent = pasteArea.classList.contains("hidden")
-    ? "+ Or paste raw text / notes"
-    : "− Hide text box";
-});
+if (pasteToggle && pasteArea) {
+  pasteToggle.addEventListener("click", () => {
+    pasteArea.classList.toggle("hidden");
+    pasteToggle.textContent = pasteArea.classList.contains("hidden")
+      ? "+ Or paste raw text / notes"
+      : "− Hide text box";
+  });
+}
 
-sampleBtn.addEventListener("click", () => {
-  pasteArea.value = SAMPLE;
-  pasteArea.classList.remove("hidden");
-  pasteToggle.textContent = "− Hide text box";
-  errorBox.classList.add("hidden");
-  toast("Sample photosynthesis notes loaded", "success");
-});
+if (sampleBtn && pasteArea) {
+  sampleBtn.addEventListener("click", () => {
+    pasteArea.value = SAMPLE;
+    pasteArea.classList.remove("hidden");
+    if (pasteToggle) pasteToggle.textContent = "− Hide text box";
+    if (errorBox) errorBox.classList.add("hidden");
+    toast("Sample photosynthesis notes loaded", "success");
+  });
+}
 
-countInput.addEventListener("input", () => {
-  countVal.textContent = countInput.value;
-});
+if (countInput && countVal) {
+  countInput.addEventListener("input", () => {
+    countVal.textContent = countInput.value;
+  });
+}
 
 document.querySelectorAll(".diff-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -187,64 +199,70 @@ document.querySelectorAll(".diff-btn").forEach((btn) => {
   });
 });
 
-genBtn.addEventListener("click", async () => {
-  if (loading) return;
-  const pasted = pasteArea.value.trim();
-  if (!files.length && pasted.length < 200) {
-    errorBox.textContent =
-      "Add a document, or paste at least a couple of paragraphs of text.";
-    errorBox.classList.remove("hidden");
-    toast("Need more content to forge a quiz", "error");
-    return;
-  }
-
-  loading = true;
-  stageIdx = 0;
-  genBtn.disabled = true;
-  if (genProgress) genProgress.classList.remove("hidden");
-  setProgressStage(0);
-  errorBox.classList.add("hidden");
-
-  stageTimer = setInterval(() => {
-    if (stageIdx < STAGES.length - 1) {
-      setProgressStage(stageIdx + 1);
+if (genBtn) {
+  genBtn.addEventListener("click", async () => {
+    if (loading) return;
+    const pasted = (pasteArea && pasteArea.value.trim()) || "";
+    if (!files.length && pasted.length < 200) {
+      if (errorBox) {
+        errorBox.textContent =
+          "Add a document, or paste at least a couple of paragraphs of text.";
+        errorBox.classList.remove("hidden");
+      }
+      toast("Need more content to forge a quiz", "error");
+      return;
     }
-  }, 1200);
 
-  try {
-    const body = new FormData();
-    files.forEach((f) => body.append("files", f));
-    if (pasted) body.append("text", pasted);
-    body.append("count", countInput.value);
-    body.append("difficulty", difficulty);
+    loading = true;
+    stageIdx = 0;
+    genBtn.disabled = true;
+    if (genProgress) genProgress.classList.remove("hidden");
+    setProgressStage(0);
+    if (errorBox) errorBox.classList.add("hidden");
 
-    const res = await fetch("/api/quiz/generate", {
-      method: "POST",
-      headers: Auth.authHeaders(),
-      body,
-    });
-    const data = await res.json();
-    if (!res.ok || !data.code)
-      throw new Error(data.error || "Generation failed.");
+    stageTimer = setInterval(() => {
+      if (stageIdx < STAGES.length - 1) {
+        setProgressStage(stageIdx + 1);
+      }
+    }, 1200);
 
-    setProgressStage(STAGES.length - 1);
-    clearInterval(stageTimer);
-    toast("Quiz forged! Launching…", "success", 1500);
-    setTimeout(() => {
-      window.location.href = `/play/${data.code}`;
-    }, 600);
-  } catch (err) {
-    errorBox.textContent = err.message || "Generation failed.";
-    errorBox.classList.remove("hidden");
-    toast(err.message || "Generation failed", "error");
-    loading = false;
-    genBtn.disabled = false;
-    genBtn.textContent = "🎮 Generate my quiz game";
-    if (genProgress) genProgress.classList.add("hidden");
-    if (genProgressFill) genProgressFill.style.width = "0%";
-    clearInterval(stageTimer);
-  }
-});
+    try {
+      const body = new FormData();
+      files.forEach((f) => body.append("files", f));
+      if (pasted) body.append("text", pasted);
+      if (countInput) body.append("count", countInput.value);
+      body.append("difficulty", difficulty);
+
+      const res = await fetch("/api/quiz/generate", {
+        method: "POST",
+        headers: Auth.authHeaders(),
+        body,
+      });
+      const data = await res.json();
+      if (!res.ok || !data.code)
+        throw new Error(data.error || "Generation failed.");
+
+      setProgressStage(STAGES.length - 1);
+      clearInterval(stageTimer);
+      toast("Quiz forged! Launching…", "success", 1500);
+      setTimeout(() => {
+        window.location.href = `/play/${data.code}`;
+      }, 600);
+    } catch (err) {
+      if (errorBox) {
+        errorBox.textContent = err.message || "Generation failed.";
+        errorBox.classList.remove("hidden");
+      }
+      toast(err.message || "Generation failed", "error");
+      loading = false;
+      genBtn.disabled = false;
+      genBtn.textContent = "🎮 Generate my quiz game";
+      if (genProgress) genProgress.classList.add("hidden");
+      if (genProgressFill) genProgressFill.style.width = "0%";
+      clearInterval(stageTimer);
+    }
+  });
+}
 
 async function loadMyQuizzes() {
   try {
@@ -255,12 +273,14 @@ async function loadMyQuizzes() {
     const list = data.quizzes || [];
     const grid = document.getElementById("myQuizzesGrid");
     const empty = document.getElementById("myQuizzesEmpty");
+    if (!grid) return;
 
     if (!list.length) {
-      empty.classList.remove("hidden");
+      if (empty) empty.classList.remove("hidden");
       return;
     }
 
+    if (empty) empty.classList.add("hidden");
     grid.innerHTML = list
       .slice(0, 8)
       .map(
@@ -285,8 +305,9 @@ async function loadRecent() {
     const list = data.quizzes || [];
     const grid = document.getElementById("recentGrid");
     const section = document.getElementById("recentSection");
+    if (!grid) return;
     if (!list.length) {
-      section.classList.add("hidden");
+      if (section) section.classList.add("hidden");
       return;
     }
     grid.innerHTML = list
