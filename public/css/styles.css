@@ -1655,3 +1655,197 @@ footer {
   color: rgba(255, 255, 255, 0.35);
   padding-bottom: 1rem;
 }
+
+/* =========================================================
+   PWA floating install button + sheet
+   ========================================================= */
+.pwa-fab {
+  position: fixed;
+  z-index: 9000;
+  bottom: 1.35rem;
+  right: 1.35rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.75rem 1.15rem;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: #fff;
+  background: linear-gradient(135deg, #7c3aed 0%, #22d3ee 100%);
+  box-shadow:
+    0 10px 28px rgba(124, 92, 255, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.12);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.25s ease;
+  animation: pwaFabIn 0.45s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.pwa-fab:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow:
+    0 14px 36px rgba(124, 92, 255, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+.pwa-fab:active {
+  transform: translateY(-1px) scale(0.98);
+}
+.pwa-fab.hidden {
+  display: none !important;
+}
+.pwa-fab-icon {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+@keyframes pwaFabIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 480px) {
+  .pwa-fab {
+    bottom: 1rem;
+    right: 1rem;
+    left: 1rem;
+    justify-content: center;
+  }
+  .toast-container {
+    bottom: 4.5rem; /* keep toasts above FAB */
+  }
+}
+
+/* Install sheet / modal */
+.pwa-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1rem;
+}
+.pwa-sheet.hidden {
+  display: none !important;
+}
+.pwa-sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+}
+.pwa-sheet-card {
+  position: relative;
+  z-index: 1;
+  width: min(420px, 100%);
+  padding: 1.75rem 1.5rem 1.5rem;
+  border-radius: 1.25rem;
+  text-align: center;
+  animation: pwaSheetUp 0.35s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+@keyframes pwaSheetUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.pwa-sheet-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.85rem;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.35rem;
+  border-radius: 0.4rem;
+}
+.pwa-sheet-close:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+.pwa-sheet-icon {
+  font-size: 2.25rem;
+  margin-bottom: 0.35rem;
+}
+.pwa-sheet-card h2 {
+  font-size: 1.35rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.pwa-sheet-sub {
+  margin-top: 0.4rem;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.45;
+}
+.pwa-steps {
+  text-align: left;
+  margin: 1.25rem 0 0.5rem;
+  padding-left: 1.25rem;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.8);
+}
+.pwa-steps li {
+  margin-bottom: 0.45rem;
+}
+.pwa-hint {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 0.5rem;
+}
+.pwa-ios-share {
+  display: inline-block;
+  padding: 0 0.2rem;
+  font-weight: 900;
+}
+.pwa-sheet-actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  margin-top: 1.35rem;
+  flex-wrap: wrap;
+}
+.pwa-install-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.7rem 1.4rem;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(90deg, #7c3aed, #22d3ee);
+  box-shadow: 0 8px 24px rgba(124, 92, 255, 0.4);
+}
+.pwa-install-btn:hover {
+  filter: brightness(1.08);
+}
+.pwa-install-btn.hidden {
+  display: none !important;
+}
+
+[data-theme="light"] .pwa-sheet-sub,
+[data-theme="light"] .pwa-hint {
+  color: rgba(26, 29, 46, 0.55);
+}
+[data-theme="light"] .pwa-steps {
+  color: rgba(26, 29, 46, 0.85);
+}
+[data-theme="light"] .pwa-sheet-close {
+  color: rgba(26, 29, 46, 0.45);
+}
+[data-theme="light"] .pwa-sheet-close:hover {
+  color: #1a1d2e;
+  background: rgba(0, 0, 0, 0.06);
+}
+[data-theme="light"] .pwa-sheet-card h2 {
+  color: #1a1d2e;
+}
+
+@media (min-width: 640px) {
+  .pwa-sheet {
+    align-items: center;
+  }
+}

@@ -12,6 +12,7 @@ let sortBy = "newest";
 function applyFilters() {
   const grid = document.getElementById("libGrid");
   const empty = document.getElementById("empty");
+  if (!grid) return;
   const countEl = document.getElementById("libCount");
 
   let list = [...allQuizzes];

@@ -3,6 +3,7 @@
 ## 2.3.0 — Theme, Library & PWA
 
 ### New
+- **Floating PWA install button** on all pages — native prompt on Chrome/Edge/Android, guided steps for iOS Safari and desktop
 - **Light / dark theme toggle** with system preference detection and localStorage persistence
 - **Library search, difficulty filters, and sort** (newest / most played / title)
 - **PWA support**: web app manifest + service worker for installable offline shell
