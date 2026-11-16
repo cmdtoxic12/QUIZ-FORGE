@@ -114,7 +114,28 @@
         cursor: not-allowed;
       }
     </style>
-  </head>
+  
+    <style>
+      /* Light mode overrides for auth pages */
+      [data-theme="light"] .auth-card h1 { color: #1a1d2e; }
+      [data-theme="light"] .auth-card p.sub,
+      [data-theme="light"] .auth-card label,
+      [data-theme="light"] .switch,
+      [data-theme="light"] .toggle-pass {
+        color: rgba(26, 29, 46, 0.62) !important;
+      }
+      [data-theme="light"] .auth-card input {
+        color: #1a1d2e !important;
+        background: #fff !important;
+        border-color: rgba(0, 0, 0, 0.14) !important;
+      }
+      [data-theme="light"] .auth-card input::placeholder {
+        color: rgba(26, 29, 46, 0.4);
+      }
+      [data-theme="light"] .switch a { color: #0891b2; }
+      [data-theme="light"] .error-box { color: #9f1239; }
+    </style>
+</head>
   <body>
     <div class="aurora"></div>
     <div class="auth-wrap">
